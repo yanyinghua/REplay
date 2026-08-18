@@ -1,0 +1,14 @@
+{
+  "miniprogramRoot": "miniprogram/",
+  "cloudfunctionRoot": "cloudfunctions/",
+  "setting": {
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "urlCheck": false
+  },
+  "appid": "touristappid",
+  "projectname": "ReadEnglish",
+  "description": "英语单词记忆小程序 M1 原型"
+}

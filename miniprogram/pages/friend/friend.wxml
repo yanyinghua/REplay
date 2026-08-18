@@ -1,0 +1,32 @@
+<view class="container">
+  <view class="card">
+    <view class="title">🔍 搜索好友</view>
+    <view class="search-row">
+      <input class="search-input" placeholder="输入昵称搜索" value="{{searchKey}}" bindinput="onSearchInput" confirm-type="search" bindconfirm="doSearch" />
+      <view class="btn-ghost" bindtap="doSearch">搜索</view>
+    </view>
+    <view wx:if="{{searchResult.length}}" class="subtitle" style="margin-top:12rpx">搜索结果</view>
+    <view wx:for="{{searchResult}}" wx:key="openid" class="row item">
+      <image wx:if="{{item.avatar}}" class="avatar" src="{{item.avatar}}" mode="aspectFill" />
+      <view wx:else class="avatar placeholder">👤</view>
+      <view class="info"><view class="name">{{item.nickName}}</view></view>
+      <view class="btn-small" data-openid="{{item.openid}}" bindtap="doFollow">关注</view>
+    </view>
+  </view>
+
+  <view wx:if="{{fromTip}}" class="tip">{{fromTip}}</view>
+
+  <view class="card">
+    <view class="row" style="margin-bottom:12rpx">
+      <view class="title">👥 我的好友（{{friends.length}}）</view>
+      <button class="share-btn" open-type="share">分享加好友</button>
+    </view>
+    <view wx:if="{{!friends.length}}" class="empty">还没有好友，搜索昵称或分享小程序加好友吧</view>
+    <view wx:for="{{friends}}" wx:key="openid" class="row item">
+      <image wx:if="{{item.avatar}}" class="avatar" src="{{item.avatar}}" mode="aspectFill" />
+      <view wx:else class="avatar placeholder">👤</view>
+      <view class="info"><view class="name">{{item.nickName}}</view></view>
+      <view class="btn-small danger" data-openid="{{item.openid}}" bindtap="doUnfollow">取关</view>
+    </view>
+  </view>
+</view>

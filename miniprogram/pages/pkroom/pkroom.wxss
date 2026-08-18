@@ -1,0 +1,30 @@
+.topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16rpx; }
+.side { text-align: center; flex: 1; }
+.who { font-size: 24rpx; color: #9aa0b4; }
+.score { font-size: 48rpx; font-weight: 800; color: #4f6ef7; }
+.side.right .score { color: #7b5cf0; }
+.mid { text-align: center; flex: 1; }
+.round { font-size: 24rpx; color: #9aa0b4; }
+.time { font-size: 40rpx; font-weight: 700; }
+.time.urgent { color: #ff6b6b; }
+.banner { text-align: center; color: #4f6ef7; font-weight: 700; margin: 8rpx 0 4rpx; }
+.offline { text-align: center; color: #ff6b6b; font-weight: 700; margin-top: 8rpx; }
+
+.options { display: flex; flex-wrap: wrap; justify-content: space-between; margin-top: 20rpx; }
+.option {
+  width: 48%; margin-bottom: 16rpx;
+  background: #eef1ff; color: #2c2c3a;
+  border-radius: 16rpx; font-size: 30rpx; padding: 24rpx 0; border: none;
+}
+.option::after { border: none; }
+.option.chosen { background: #4f6ef7; color: #fff; }
+.option.disabled { opacity: 0.5; }
+
+.overlay {
+  position: fixed; left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center; z-index: 100;
+}
+.result-card { background: #fff; width: 80%; border-radius: 24rpx; padding: 48rpx; text-align: center; }
+.reward { margin-top: 16rpx; font-size: 30rpx; font-weight: 700; color: #4f6ef7; }
+.reward.badge { color: #ff9f1c; }

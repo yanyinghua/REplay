@@ -1,0 +1,51 @@
+<!-- 测验中 -->
+<view class="container" wx:if="{{!finished && total > 0}}">
+  <view class="row" style="margin-bottom:12rpx">
+    <view class="subtitle">第 {{index+1}} / {{total}} 题</view>
+    <view class="subtitle">✅ {{correct}}</view>
+  </view>
+  <view class="bar" style="margin-bottom:32rpx"><view class="bar-fill" style="width:{{percent}}%"></view></view>
+
+  <view class="quiz-card card">
+    <view class="emoji-big">{{word.emoji}}</view>
+    <view class="meaning-big">{{word.meaning}}</view>
+    <view class="phonetic">{{word.phonetic}}</view>
+    <view class="subtitle" style="margin-top:12rpx">选出正确拼写 👇</view>
+  </view>
+
+  <view class="options">
+    <button
+      wx:for="{{choices}}" wx:key="*this"
+      class="option {{answered ? (item === word.spell ? 'right' : (item === selected ? 'wrong' : '')) : ''}}"
+      disabled="{{answered}}"
+      bindtap="choose" data-opt="{{item}}">
+      {{item}}
+    </button>
+  </view>
+
+  <button wx:if="{{answered}}" class="btn-primary" style="margin-top:24rpx" bindtap="next">下一题 →</button>
+  <view wx:if="{{answered}}" class="subtitle center" style="margin-top:16rpx">{{feedback}}</view>
+</view>
+
+<!-- 空状态 -->
+<view class="container center" wx:if="{{!finished && total === 0}}">
+  <view style="font-size:120rpx">🍃</view>
+  <view class="title">没有需要测验的词</view>
+  <button class="btn-primary" style="margin-top:40rpx" bindtap="back">返回首页</button>
+</view>
+
+<!-- 结果 -->
+<view class="container center" wx:if="{{finished}}">
+  <view style="font-size:110rpx">{{stars >= 3 ? '🌟🌟🌟' : (stars === 2 ? '🌟🌟' : (stars === 1 ? '🌟' : '💪'))}}</view>
+  <view class="title">{{stars > 0 ? '闯关成功！' : '再接再厉'}}</view>
+  <view class="subtitle" style="margin-top:10rpx">正确率 {{accuracy}}% （{{correct}}/{{total}}）</view>
+
+  <view class="card" style="margin-top:30rpx;text-align:left">
+    <view class="row"><view class="muted">获得经验</view><view>＋{{gainExp}}</view></view>
+    <view class="row" style="margin-top:12rpx"><view class="muted">获得金币</view><view>＋{{gainCoin}} 🪙</view></view>
+    <view class="row" style="margin-top:12rpx" wx:if="{{leveledUp}}"><view class="muted">升级</view><view>🎉 升到 Lv.{{newLevel}}</view></view>
+  </view>
+
+  <button class="btn-primary" style="margin-top:30rpx" bindtap="retry">🔁 再来一次</button>
+  <button class="btn-ghost" style="margin-top:18rpx" bindtap="back">返回首页</button>
+</view>

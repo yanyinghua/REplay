@@ -1,0 +1,28 @@
+<view class="container">
+  <view class="title">❌ 错词本</view>
+  <view class="subtitle" style="margin:8rpx 0 16rpx">共 {{count}} 个易错词，累计答错 {{totalWrong}} 次</view>
+
+  <view class="card" wx:if="{{count > 0}}">
+    <button class="btn-primary" bindtap="practice">🛠 开始巩固（专练错词）</button>
+  </view>
+
+  <view class="card wrong-item" wx:for="{{list}}" wx:key="id">
+    <view class="emoji-big" style="font-size:64rpx">{{item.emoji}}</view>
+    <view class="wrong-main">
+      <view class="row">
+        <view class="word-big" style="font-size:36rpx">{{item.spell}}</view>
+        <view class="tag">错 {{item.lapses}} 次</view>
+      </view>
+      <view class="subtitle">{{item.meaning}} · {{item.phonetic}}</view>
+      <view class="subtitle" style="margin-top:6rpx">下次复习：{{item.next}}</view>
+    </view>
+    <view class="remove" bindtap="remove" data-id="{{item.id}}">✕</view>
+  </view>
+
+  <view class="center" wx:if="{{count === 0}}" style="margin-top:140rpx">
+    <view style="font-size:120rpx">🎉</view>
+    <view class="title">错词本已清空</view>
+    <view class="subtitle" style="margin-top:12rpx">少犯错就是进步，继续保持</view>
+    <button class="btn-ghost" style="margin-top:30rpx" bindtap="back">返回首页</button>
+  </view>
+</view>

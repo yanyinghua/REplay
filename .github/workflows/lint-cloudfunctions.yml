@@ -1,0 +1,51 @@
+name: Lint Cloud Functions
+
+# 门禁：PR 与推送到 main 时校验云函数源码，避免坏代码合入
+on:
+  push:
+    branches: ['main']
+    paths:
+      - 'cloudfunctions/**'
+      - 'miniprogram/pages/rank/**'
+      - 'scripts/lint-cloudfunctions.js'
+      - 'scripts/test-rank.js'
+  pull_request:
+    paths:
+      - 'cloudfunctions/**'
+      - 'miniprogram/pages/rank/**'
+      - 'miniprogram/pages/friend/**'
+      - 'miniprogram/pages/class/**'
+      - 'scripts/lint-cloudfunctions.js'
+      - 'scripts/test-rank.js'
+      - 'scripts/test-social.js'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint cloud functions
+        run: npm run lint:cloud
+
+      - name: Prettier format check
+        run: npm run format:cloud:check
+
+      - name: Syntax + JSON check
+        run: node scripts/lint-cloudfunctions.js
+
+      - name: End-to-end rank integration test
+        run: npm run test:rank
+
+      - name: End-to-end social integration test
+        run: npm run test:social

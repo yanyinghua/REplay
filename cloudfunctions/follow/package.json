@@ -1,0 +1,9 @@
+{
+  "name": "follow",
+  "version": "1.0.0",
+  "description": "M3.2 好友关注云函数（search/follow/unfollow/list）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

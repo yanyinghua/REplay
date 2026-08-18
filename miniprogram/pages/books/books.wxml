@@ -1,0 +1,16 @@
+<view class="container">
+  <view class="title" style="margin-bottom:8rpx">选择词库</view>
+  <view class="subtitle" style="margin-bottom:16rpx">分级 / 主题 / 自定义，挑你感兴趣的来背</view>
+
+  <view class="book card" wx:for="{{books}}" wx:key="bookId" bindtap="openBook" data-id="{{item.bookId}}">
+    <view class="book-emoji" style="background:{{item.color}}22">{{item.emoji}}</view>
+    <view class="book-main">
+      <view class="row">
+        <view class="title" style="font-size:34rpx">{{item.name}}</view>
+        <view class="muted">{{item.learned}}/{{item.total}} 词</view>
+      </view>
+      <view class="subtitle" style="margin-top:6rpx">{{item.desc}}</view>
+      <view class="bar" style="margin-top:14rpx"><view class="bar-fill" style="width:{{item.percent}}%"></view></view>
+    </view>
+  </view>
+</view>

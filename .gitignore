@@ -1,0 +1,4 @@
+node_modules/
+ci.config.json
+*.key
+private*.pem

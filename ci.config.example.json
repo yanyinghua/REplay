@@ -1,0 +1,5 @@
+{
+  "appid": "wxYOUR_APPID",
+  "env": "your-cloud-env-id",
+  "privateKeyPath": "./private.key"
+}

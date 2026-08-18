@@ -1,0 +1,50 @@
+name: Deploy Cloud Functions
+
+on:
+  push:
+    tags:
+      - 'v*'            # 仅打 tag 时部署，例如 git tag v1.0.0 && git push --tags
+  workflow_dispatch:    # 也可在 Actions 页面手动触发
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # 防止并发部署互相覆盖
+    concurrency:
+      group: deploy-cloud
+      cancel-in-progress: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install miniprogram-ci
+        run: npm ci
+
+      - name: Write upload key
+        # 密钥以文件形式提供：将 secret 内容写入 ./private.key
+        run: |
+          printf '%s' "${{ secrets.WX_PRIVATE_KEY }}" > ./private.key
+          chmod 600 ./private.key
+
+      - name: Lint cloud functions (gate)
+        run: node scripts/lint-cloudfunctions.js
+
+      - name: ESLint cloud functions (gate)
+        run: npm run lint:cloud
+
+      - name: Deploy cloud functions
+        env:
+          WX_APPID: ${{ secrets.WX_APPID }}
+          WX_ENV: ${{ secrets.WX_ENV }}
+          WX_PRIVATE_KEY_PATH: ./private.key
+        run: npm run deploy:cloud
+
+      - name: Cleanup key
+        if: always()
+        run: rm -f ./private.key

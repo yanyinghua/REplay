@@ -1,0 +1,9 @@
+{
+  "name": "pk",
+  "version": "1.0.0",
+  "description": "实时 PK 云函数（匹配/开局/答题/超时/心跳/退出）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

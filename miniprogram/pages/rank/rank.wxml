@@ -1,0 +1,57 @@
+<view class="container">
+  <!-- 榜单切换 -->
+  <view class="tabs">
+    <view
+      wx:for="{{scopes}}"
+      wx:key="key"
+      class="tab {{scope === item.key ? 'active' : ''}}"
+      data-scope="{{item.key}}"
+      bindtap="onSwitchScope"
+    >{{item.label}}</view>
+  </view>
+
+  <!-- 词库榜选择器 -->
+  <view wx:if="{{scope === 'book'}}" class="book-bar">
+    <picker mode="selector" range="{{books}}" range-key="label" bindchange="onSwitchBook">
+      <view class="book-picker">📚 {{books[0].label}} ▾</view>
+    </picker>
+    <view class="book-hint">（选择词库查看星星榜）</view>
+  </view>
+
+  <!-- 仅看好友 -->
+  <view class="friend-bar">
+    <text class="subtitle">仅看好友</text>
+    <switch checked="{{friendOnly}}" bindchange="onToggleFriend" color="#4f6ef7" />
+  </view>
+  <view wx:if="{{friendTip}}" class="tip">{{friendTip}}</view>
+
+  <!-- 我的排名卡 -->
+  <view class="card me">
+    <view class="me-rank">我的排名 <text class="big">#{{me.rank}}</text></view>
+    <view class="me-value">{{me.value}} {{unit}}</view>
+    <view wx:if="{{me.rank > 1 && topValue > me.value}}" class="me-gap">
+      距离榜首还差 {{topValue - me.value}} {{unit}}
+    </view>
+    <view wx:if="{{me.rank === 1}}" class="me-gap gold">🏆 你就是榜首！</view>
+  </view>
+
+  <!-- 榜单列表 -->
+  <view wx:if="{{board.length === 0 && !loading}}" class="empty">
+    暂无排名数据，快去学习 / PK 提升自己吧 💪
+  </view>
+
+  <view wx:for="{{board}}" wx:key="openid" class="card row item {{item.openid === me.openid ? 'mine' : ''}}">
+    <view class="rank {{item.rank <= 3 ? 'top' + item.rank : ''}}">
+      {{item.rank <= 3 ? (item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : '🥉') : item.rank}}
+    </view>
+    <image wx:if="{{item.avatar}}" class="avatar" src="{{item.avatar}}" mode="aspectFill" />
+    <view wx:else class="avatar placeholder">👤</view>
+    <view class="info">
+      <view class="name">{{item.openid === me.openid ? item.nickName + '（我）' : item.nickName}}</view>
+      <view class="subtitle">{{item.value}} {{unit}}</view>
+    </view>
+    <view wx:if="{{item.openid === me.openid}}" class="me-tag">我</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading">加载中…</view>
+</view>

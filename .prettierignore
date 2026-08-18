@@ -1,0 +1,6 @@
+# 不格式化依赖与小程序前端（仅云函数纳入 Prettier 管理）
+**/node_modules/**
+miniprogram/**
+scripts/**
+package-lock.json
+*.md

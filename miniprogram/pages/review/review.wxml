@@ -1,0 +1,13 @@
+<view class="container center">
+  <view style="font-size:120rpx">🔁</view>
+  <view class="title">间隔复习</view>
+  <view class="subtitle" style="margin-top:12rpx">根据遗忘曲线，现在有 {{dueCount}} 个词快忘了</view>
+
+  <view class="card" style="margin-top:30rpx;text-align:left">
+    <view class="row"><view class="muted">到期待复习</view><view>{{dueCount}} 个</view></view>
+    <view class="row" style="margin-top:12rpx"><view class="muted">建议</view><view>每次 5~10 个最佳</view></view>
+  </view>
+
+  <button class="btn-primary" style="margin-top:40rpx" bindtap="start" disabled="{{dueCount===0}}">开始复习</button>
+  <button class="btn-ghost" style="margin-top:18rpx" bindtap="back">返回</button>
+</view>

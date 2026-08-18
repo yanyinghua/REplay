@@ -1,0 +1,154 @@
+.container {
+  padding: 24rpx;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* 榜单切换 */
+.tabs {
+  display: flex;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 8rpx;
+  margin-bottom: 20rpx;
+}
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 18rpx 0;
+  font-size: 30rpx;
+  color: #666;
+  border-radius: 12rpx;
+}
+.tab.active {
+  background: #4f6ef7;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* 词库选择器 */
+.book-bar {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 16rpx;
+}
+.book-picker {
+  background: #fff;
+  padding: 14rpx 24rpx;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: #333;
+}
+.book-hint {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 仅看好友 */
+.friend-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 18rpx 24rpx;
+  margin-bottom: 12rpx;
+}
+.tip {
+  font-size: 24rpx;
+  color: #e0833a;
+  background: #fff7ec;
+  border-radius: 10rpx;
+  padding: 12rpx 20rpx;
+  margin-bottom: 16rpx;
+}
+
+/* 我的排名卡 */
+.me {
+  background: linear-gradient(135deg, #4f6ef7, #6a8bff);
+  color: #fff;
+  margin-bottom: 20rpx;
+}
+.me-rank {
+  font-size: 28rpx;
+  opacity: 0.95;
+}
+.me-rank .big {
+  font-size: 44rpx;
+  font-weight: 700;
+  margin-left: 12rpx;
+}
+.me-value {
+  font-size: 36rpx;
+  font-weight: 600;
+  margin-top: 8rpx;
+}
+.me-gap {
+  font-size: 24rpx;
+  opacity: 0.9;
+  margin-top: 8rpx;
+}
+.me-gap.gold {
+  color: #ffe08a;
+}
+
+/* 列表项 */
+.item {
+  align-items: center;
+}
+.item.mine {
+  border: 2rpx solid #4f6ef7;
+  background: #f3f6ff;
+}
+.rank {
+  width: 64rpx;
+  text-align: center;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #888;
+}
+.rank.top1 { color: #f5a623; }
+.rank.top2 { color: #9aa6b2; }
+.rank.top3 { color: #cd7f32; }
+.avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  margin: 0 20rpx;
+  background: #eef;
+}
+.avatar.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  background: #eaeefb;
+}
+.info {
+  flex: 1;
+}
+.name {
+  font-size: 30rpx;
+  color: #222;
+}
+.me-tag {
+  background: #4f6ef7;
+  color: #fff;
+  font-size: 22rpx;
+  padding: 4rpx 14rpx;
+  border-radius: 20rpx;
+}
+
+.empty {
+  text-align: center;
+  color: #999;
+  font-size: 28rpx;
+  padding: 80rpx 0;
+}
+.loading {
+  text-align: center;
+  color: #aaa;
+  font-size: 26rpx;
+  padding: 24rpx 0;
+}

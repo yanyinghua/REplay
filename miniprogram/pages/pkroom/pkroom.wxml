@@ -1,0 +1,63 @@
+<view class="container">
+
+  <!-- 匹配 / 等待 -->
+  <view wx:if="{{status==='matching' || status==='waiting'}}" class="center" style="margin-top:220rpx">
+    <view style="font-size:130rpx">⚔️</view>
+    <view class="title">{{status==='matching' ? '匹配中…' : '等待对手加入…'}}</view>
+    <view class="subtitle" style="margin-top:12rpx">房间号 {{roomId}}</view>
+    <view class="subtitle" style="margin-top:6rpx">把房间号发给好友即可邀请对战</view>
+  </view>
+
+  <!-- 对战中 -->
+  <block wx:if="{{status==='playing'}}">
+    <view class="topbar">
+      <view class="side">
+        <view class="who">我</view>
+        <view class="score">{{myScore}}</view>
+      </view>
+      <view class="mid">
+        <view class="round">第 {{qIndex+1}} / {{total}} 题</view>
+        <view class="time {{timeLeft<=3 ? 'urgent' : ''}}">⏱ {{timeLeft}}s</view>
+      </view>
+      <view class="side right">
+        <view class="who">{{oppName}}</view>
+        <view class="score">{{oppScore}}</view>
+      </view>
+    </view>
+
+    <view wx:if="{{banner}}" class="banner">{{banner}}</view>
+
+    <view wx:if="{{oppOffline}}" class="offline">⚠️ 对手已离线</view>
+    <button wx:if="{{oppOffline}}" class="btn-ghost" style="margin-top:14rpx" bindtap="quitGame">结束并判我胜</button>
+
+    <view class="qcard card" wx:if="{{current}}">
+      <view class="emoji-big">{{current.emoji}}</view>
+      <view class="meaning-big">{{current.meaning}}</view>
+      <view class="phonetic">{{current.phonetic}}</view>
+      <view class="subtitle center" style="margin-top:14rpx">选出正确拼写 👇</view>
+
+      <view class="options">
+        <button
+          wx:for="{{current.options}}" wx:for-index="oi" wx:key="*this"
+          class="option {{answered||locked ? 'disabled' : ''}} {{selected===oi ? 'chosen' : ''}}"
+          disabled="{{answered||locked}}"
+          data-opt="{{oi}}" bindtap="onChoose">{{item}}</button>
+      </view>
+
+      <view class="subtitle center" style="margin-top:18rpx">{{feedback}}</view>
+    </view>
+  </block>
+
+  <!-- 结算遮罩 -->
+  <view wx:if="{{overlay.show}}" class="overlay">
+    <view class="result-card">
+      <view style="font-size:100rpx">{{overlay.win ? '🏆' : (overlay.draw ? '🤝' : '😢')}}</view>
+      <view class="title">{{overlay.win ? '你赢了！' : (overlay.draw ? '平局' : '惜败'}}</view>
+      <view class="subtitle">我 {{overlay.my}} · {{overlay.opp}} 对手</view>
+      <view wx:if="{{overlay.myExp}}" class="reward">🎁 获得 +{{overlay.myExp}} EXP · +{{overlay.myCoin}} 金币</view>
+      <view wx:if="{{overlay.badge}}" class="reward badge">{{overlay.badge}}</view>
+      <button class="btn-primary" style="margin-top:30rpx" bindtap="restart">再来一局</button>
+      <button class="btn-ghost" style="margin-top:16rpx" bindtap="back">返回首页</button>
+    </view>
+  </view>
+</view>

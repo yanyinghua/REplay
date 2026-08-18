@@ -1,0 +1,44 @@
+<view class="container" wx:if="{{!done}}">
+  <view class="row" style="margin-bottom:16rpx">
+    <view class="subtitle">第 {{index+1}} / {{total}} 个</view>
+    <view class="subtitle">关卡 {{level+1}}</view>
+  </view>
+  <view class="bar" style="margin-bottom:24rpx"><view class="bar-fill" style="width:{{percent}}%"></view></view>
+
+  <view class="flip-card" bindtap="flip">
+    <view class="flip-inner {{flipped ? 'flipped' : ''}}">
+      <!-- 正面：图 + 词 + 音标 -->
+      <view class="flip-face flip-front">
+        <view class="emoji-big">{{word.emoji}}</view>
+        <view class="word-big">{{word.spell}}</view>
+        <view class="phonetic">{{word.phonetic}}</view>
+        <view class="subtitle" style="margin-top:20rpx">👆 点击翻转看释义</view>
+      </view>
+      <!-- 背面：释义 + 例句 + 联想 + 词根 -->
+      <view class="flip-face flip-back">
+        <view class="meaning-big">{{word.emoji}} {{word.meaning}}</view>
+        <view class="example">{{word.example}}</view>
+        <view class="mnemonic" wx:if="{{word.mnemonic}}">💡 联想：{{word.mnemonic}}</view>
+        <view class="mnemonic" wx:if="{{word.root}}">🧩 词根：{{word.root}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="row" style="margin-top:32rpx">
+    <button class="btn-ghost" style="width:48%" bindtap="speak">🔊 发音</button>
+    <button class="btn-ghost" style="width:48%" bindtap="flip">🔄 翻面</button>
+  </view>
+  <view class="row" style="margin-top:20rpx">
+    <button class="btn-ghost" style="width:48%;border:2rpx solid #ff6b6b;color:#ff6b6b;background:#fff0f0" bindtap="notKnown">😵 不认识</button>
+    <button class="btn-primary" style="width:48%" bindtap="known">😎 认识</button>
+  </view>
+</view>
+
+<!-- 完成学习，进入闯关测验 -->
+<view class="container center" wx:else>
+  <view style="font-size:120rpx">🎉</view>
+  <view class="title">本关单词学完啦</view>
+  <view class="subtitle" style="margin-top:12rpx">接下来用「主动回忆」闯关测验巩固记忆</view>
+  <button class="btn-primary" style="margin-top:40rpx" bindtap="startQuiz">🚀 开始闯关测验</button>
+  <button class="btn-ghost" style="margin-top:20rpx" bindtap="back">返回词库</button>
+</view>

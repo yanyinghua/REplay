@@ -1,0 +1,55 @@
+<view class="container">
+  <view wx:if="{{autoTip}}" class="tip">{{autoTip}}</view>
+
+  <!-- 我的班级 -->
+  <view class="card">
+    <view class="row" style="margin-bottom:12rpx">
+      <view class="title">🏫 我的班级（{{myClasses.length}}）</view>
+      <view class="btn-ghost" bindtap="toggleCreate">{{showCreate ? '取消' : '＋建班'}}</view>
+    </view>
+
+    <view wx:if="{{showCreate}}" class="create-box">
+      <input class="inp" placeholder="班级名称" value="{{newName}}" bindinput="onName" />
+      <input class="inp" placeholder="班级目标（选填）" value="{{newGoal}}" bindinput="onGoal" />
+      <view class="btn-primary" bindtap="createClass">创建班级</view>
+    </view>
+
+    <view wx:if="{{!myClasses.length && !showCreate}}" class="empty">还没有班级，建一个或输入 ID 加入</view>
+    <view wx:for="{{myClasses}}" wx:key="classId" class="row item" data-id="{{item.classId}}" bindtap="openDetail">
+      <view class="info">
+        <view class="name">{{item.name}}</view>
+        <view class="subtitle">{{item.memberCount}} 人{{item.isOwner ? ' · 我是班长' : ''}}{{item.goalText ? ' · ' + item.goalText : ''}}</view>
+      </view>
+      <view class="muted">›</view>
+    </view>
+
+    <!-- 加班 -->
+    <view class="join-row">
+      <input class="inp" placeholder="输入班级 ID 加入" value="{{joinId}}" bindinput="onJoinId" />
+      <view class="btn-small" bindtap="doJoin">加入</view>
+    </view>
+  </view>
+
+  <!-- 班级详情 -->
+  <view wx:if="{{detail}}" class="card">
+    <view class="row" style="margin-bottom:12rpx">
+      <view class="title">📊 {{detail.name}} · 班级榜</view>
+      <button class="share-btn" open-type="share">分享班级</button>
+    </view>
+
+    <view class="subtitle" style="margin-bottom:8rpx">成员（{{detail.members.length}}）</view>
+    <view wx:for="{{detail.members}}" wx:key="openid" class="row item">
+      <view class="avatar ph">👤</view>
+      <view class="info"><view class="name">{{item.nickName}}</view><view class="subtitle">Lv.{{item.level}} · {{item.exp}} 经验</view></view>
+    </view>
+
+    <view class="subtitle" style="margin:16rpx 0 8rpx">排行榜（按经验）</view>
+    <view wx:for="{{detail.board}}" wx:key="openid" class="row item">
+      <view class="rank {{item.rank <= 3 ? 'top' + item.rank : ''}}">{{item.rank}}</view>
+      <view class="avatar ph">👤</view>
+      <view class="info"><view class="name">{{item.nickName}}</view><view class="subtitle">{{item.exp}} 经验</view></view>
+    </view>
+
+    <view class="btn-danger" data-id="{{detail.classId}}" bindtap="quitClass">退出班级</view>
+  </view>
+</view>

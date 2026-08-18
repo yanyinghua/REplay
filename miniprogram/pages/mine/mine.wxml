@@ -1,0 +1,49 @@
+<view class="container">
+  <view class="card profile">
+    <view class="row">
+      <view class="avatar">🦊</view>
+      <view style="flex:1;margin-left:20rpx">
+        <view class="title" style="font-size:36rpx">单词侠</view>
+        <view class="subtitle">Lv.{{level}} · 连续打卡 {{streak}} 天</view>
+      </view>
+      <view class="coin">🪙 {{coin}}</view>
+    </view>
+    <view class="subtitle" style="margin-top:20rpx">经验 {{expInLevel}}/{{need}}</view>
+    <view class="bar" style="margin-top:8rpx"><view class="bar-fill" style="width:{{expPercent}}%"></view></view>
+  </view>
+
+  <view class="card row">
+    <view class="stat"><view class="stat-num">{{learned}}</view><view class="muted">已学词</view></view>
+    <view class="stat"><view class="stat-num">{{streak}}</view><view class="muted">连续天</view></view>
+    <view class="stat"><view class="stat-num">{{badges.length}}</view><view class="muted">徽章</view></view>
+  </view>
+
+  <view class="card">
+    <view class="title" style="font-size:32rpx;margin-bottom:16rpx">🏅 我的徽章</view>
+    <view wx:if="{{badges.length === 0}}" class="subtitle">还没有徽章，去学习解锁吧～</view>
+    <view class="badge-list">
+      <view class="badge" wx:for="{{badges}}" wx:key="name">
+        <view class="badge-icon">{{item.icon}}</view>
+        <view class="badge-name">{{item.name}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="card row" bindtap="goMistakes" style="margin-top:10rpx">
+    <view>
+      <view class="title" style="font-size:32rpx">❌ 错词本</view>
+      <view class="subtitle">专练易错词（{{wrongCount}} 个）</view>
+    </view>
+    <view class="muted">›</view>
+  </view>
+
+  <view class="card row" bindtap="goCurve" style="margin-top:10rpx">
+    <view>
+      <view class="title" style="font-size:32rpx">📈 记忆曲线</view>
+      <view class="subtitle">看看你的记忆留存走势</view>
+    </view>
+    <view class="muted">›</view>
+  </view>
+
+  <button class="btn-ghost" style="margin-top:10rpx" bindtap="reset">清空本地进度（调试）</button>
+</view>

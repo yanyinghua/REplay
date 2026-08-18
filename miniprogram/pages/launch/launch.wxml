@@ -1,0 +1,5 @@
+<view class="splash">
+  <view class="logo">📚</view>
+  <view class="app-name">单词记忆</view>
+  <view class="slogan">记得住 · 玩得久 · 能社交</view>
+</view>

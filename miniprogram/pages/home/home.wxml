@@ -1,0 +1,100 @@
+<view class="container">
+  <!-- 用户状态卡 -->
+  <view class="card profile">
+    <view class="row">
+      <view>
+        <view class="title">👋 你好，单词侠</view>
+        <view class="subtitle">Lv.{{level}} · 连续打卡 {{streak}} 天</view>
+      </view>
+      <view class="coin">🪙 {{coin}}</view>
+    </view>
+    <view class="subtitle" style="margin-top:16rpx">经验值 {{expInLevel}}/{{need}}</view>
+    <view class="bar" style="margin-top:8rpx"><view class="bar-fill" style="width:{{expPercent}}%"></view></view>
+  </view>
+
+  <!-- 打卡 -->
+  <view class="card row" bindtap="onCheckIn">
+    <view>
+      <view class="title" style="font-size:32rpx">每日打卡</view>
+      <view class="subtitle">{{checkinText}}</view>
+    </view>
+    <view class="btn-ghost" style="width:180rpx">打卡 +{{checkinBonus}}</view>
+  </view>
+
+  <!-- 今日复习 (SRS) -->
+  <view class="card" bindtap="goReview">
+    <view class="row">
+      <view class="title" style="font-size:34rpx">🔁 今日复习</view>
+      <view class="stars">{{dueCount}} 个到期</view>
+    </view>
+    <view class="subtitle" style="margin-top:8rpx">
+      {{dueCount > 0 ? '趁还没忘，赶紧巩固一下～' : '太棒了，暂时没有到期词 🎉'}}
+    </view>
+    <view class="bar" style="margin-top:16rpx"><view class="bar-fill" style="width:{{retention}}%"></view></view>
+    <view class="subtitle" style="margin-top:8rpx">记忆留存约 {{retention}}%（复习越多越牢）</view>
+  </view>
+
+  <!-- 错词本 -->
+  <view class="card row" bindtap="goMistakes">
+    <view>
+      <view class="title" style="font-size:32rpx">❌ 错词本</view>
+      <view class="subtitle">{{wrongCount > 0 ? wrongCount + ' 个易错词待巩固' : '暂无错词，太棒了'}}</view>
+    </view>
+    <view class="muted">›</view>
+  </view>
+
+  <!-- 记忆曲线 -->
+  <view class="card row" bindtap="goCurve">
+    <view>
+      <view class="title" style="font-size:32rpx">📈 记忆曲线</view>
+      <view class="subtitle">当前记忆留存约 {{retention}}%</view>
+    </view>
+    <view class="muted">›</view>
+  </view>
+
+  <!-- 实时 PK -->
+  <view class="card row" bindtap="goPK">
+    <view>
+      <view class="title" style="font-size:32rpx">⚔️ PK 对战</view>
+      <view class="subtitle">实时匹配，抢答比拼</view>
+    </view>
+    <view class="muted">›</view>
+  </view>
+
+  <!-- 排行榜 -->
+  <view class="card row" bindtap="goRank">
+    <view>
+      <view class="title" style="font-size:32rpx">🏆 排行榜</view>
+      <view class="subtitle">总榜 / 坚持榜 / 词库榜</view>
+    </view>
+    <view class="muted">›</view>
+  </view>
+
+  <!-- 好友 / 班级 -->
+  <view class="grid2">
+    <view class="card cell" bindtap="goFriend">
+      <view class="title" style="font-size:32rpx">👥 好友</view>
+      <view class="subtitle">关注好友 · 好友榜</view>
+    </view>
+    <view class="card cell" bindtap="goClass">
+      <view class="title" style="font-size:32rpx">🏫 班级</view>
+      <view class="subtitle">建班 · 班级榜</view>
+    </view>
+  </view>
+
+  <!-- 学习入口 -->
+  <view class="card study-entry" bindtap="goBooks">
+    <view class="title" style="font-size:34rpx">📖 开始学习</view>
+    <view class="subtitle" style="margin-top:8rpx">选词库 → 翻转卡学习 → 闯关测验</view>
+    <view class="btn-primary" style="margin-top:20rpx">选词库去学习</view>
+  </view>
+
+  <!-- 关卡入口 -->
+  <view class="card row" bindtap="goMap">
+    <view>
+      <view class="title" style="font-size:32rpx">🗺️ 关卡进度</view>
+      <view class="subtitle">查看已通关星星</view>
+    </view>
+    <view class="muted">›</view>
+  </view>
+</view>

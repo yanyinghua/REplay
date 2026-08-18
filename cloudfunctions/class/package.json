@@ -1,0 +1,9 @@
+{
+  "name": "class",
+  "version": "1.0.0",
+  "description": "M3.2 班级/群云函数（create/join/quit/my/members/board）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

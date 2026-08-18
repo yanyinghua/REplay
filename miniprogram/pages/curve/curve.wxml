@@ -1,0 +1,30 @@
+<view class="container">
+  <view class="title">📈 记忆曲线</view>
+  <view class="subtitle" style="margin:8rpx 0 16rpx">基于你的复习记录，预测记忆留存变化</view>
+
+  <view class="card center" wx:if="{{!hasData}}">
+    <view style="font-size:110rpx">🧠</view>
+    <view class="title">还没有数据</view>
+    <view class="subtitle" style="margin-top:10rpx">去学习一些单词，就能看到你的记忆曲线</view>
+    <button class="btn-primary" style="margin-top:30rpx" bindtap="goStudy">去学单词</button>
+  </view>
+
+  <block wx:else>
+    <view class="card">
+      <view class="row">
+        <view class="stat"><view class="stat-num" style="color:#4f6ef7">{{current}}%</view><view class="muted">当前留存</view></view>
+        <view class="stat"><view class="stat-num">{{learned}}</view><view class="muted">已学词</view></view>
+        <view class="stat"><view class="stat-num" style="color:#ff6b6b">{{urgent}}</view><view class="muted">7天告急</view></view>
+      </view>
+      <canvas type="2d" id="curve" class="curve-canvas"></canvas>
+      <view class="subtitle center" style="margin-top:10rpx">蓝线：若停止复习，未来 30 天记忆留存走势</view>
+    </view>
+
+    <view class="card">
+      <view class="title" style="font-size:30rpx">💡 怎么看这条线</view>
+      <view class="subtitle" style="margin-top:10rpx">· 曲线越低，说明忘得越多</view>
+      <view class="subtitle" style="margin-top:6rpx">· 按时复习会让曲线在「到期点」反弹回高位</view>
+      <view class="subtitle" style="margin-top:6rpx">· 标红的「7天告急」词，记得去复习 / 错词本巩固</view>
+    </view>
+  </block>
+</view>
