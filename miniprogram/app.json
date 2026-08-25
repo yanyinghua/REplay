@@ -13,7 +13,8 @@
     "pages/class/class",
     "pages/pkroom/pkroom",
     "pages/map/map",
-    "pages/mine/mine"
+    "pages/mine/mine",
+    "pages/bookstore/bookstore"
   ],
   "window": {
     "navigationBarTitleText": "单词记忆",

@@ -52,7 +52,7 @@
   <view wx:if="{{overlay.show}}" class="overlay">
     <view class="result-card">
       <view style="font-size:100rpx">{{overlay.win ? '🏆' : (overlay.draw ? '🤝' : '😢')}}</view>
-      <view class="title">{{overlay.win ? '你赢了！' : (overlay.draw ? '平局' : '惜败'}}</view>
+      <view class="title">{{overlay.win ? '你赢了！' : (overlay.draw ? '平局' : '惜败')}}</view>
       <view class="subtitle">我 {{overlay.my}} · {{overlay.opp}} 对手</view>
       <view wx:if="{{overlay.myExp}}" class="reward">🎁 获得 +{{overlay.myExp}} EXP · +{{overlay.myCoin}} 金币</view>
       <view wx:if="{{overlay.badge}}" class="reward badge">{{overlay.badge}}</view>

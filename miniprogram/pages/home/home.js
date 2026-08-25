@@ -1,7 +1,7 @@
 // pages/home/home.js
 const store = require('../../utils/store.js')
 const ret = require('../../utils/retention.js')
-const words = require('../../data/words.js')
+const words = require('../../utils/wordbank.js')
 
 Page({
   data: {

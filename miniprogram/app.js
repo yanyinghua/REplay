@@ -12,7 +12,7 @@ App({
       console.error('当前基础库不支持云开发，请使用 2.2.3 或以上的基础库')
     } else {
       wx.cloud.init({
-        env: 'your-env-id',   // ← 替换为你的云环境 ID
+        env: 'cloudbase-d3gcgv15j8708be61',
         traceUser: true
       })
     }

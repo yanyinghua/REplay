@@ -1,5 +1,5 @@
 // pages/mistakes/mistakes.js —— 错词本（聚焦易错词，巩固直到清零）
-const words = require('../../data/words.js')
+const words = require('../../utils/wordbank.js')
 const store = require('../../utils/store.js')
 const srs = require('../../utils/srs.js')
 

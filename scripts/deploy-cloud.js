@@ -31,7 +31,8 @@ const functions = [
   { name: 'pk', dir: 'pk' },
   { name: 'rank', dir: 'rank' },
   { name: 'follow', dir: 'follow' },
-  { name: 'class', dir: 'class' }
+  { name: 'class', dir: 'class' },
+  { name: 'import-words', dir: 'import-words' }
 ]
 
 const project = new ci.Project({

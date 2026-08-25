@@ -13,7 +13,7 @@
         class="level-cell {{lv.locked ? 'locked' : ''}}"
         bindtap="openLevel" data-book="{{item.bookId}}" data-level="{{lv.idx}}">
         <view class="lv-num">{{lv.idx + 1}}</view>
-        <view class="lv-stars">{{lv.stars > 0 ? '⭐'.repeat(lv.stars) : (lv.locked ? '🔒' : '·')}}</view>
+        <view class="lv-stars">{{lv.starStr}}</view>
       </view>
     </view>
   </view>

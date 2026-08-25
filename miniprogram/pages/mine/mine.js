@@ -1,6 +1,6 @@
 // pages/mine/mine.js
 const store = require('../../utils/store.js')
-const words = require('../../data/words.js')
+const words = require('../../utils/wordbank.js')
 
 const BADGE_DEFS = [
   { name: '初出茅庐', icon: '🌱', test: (s) => s.learned >= 10 },

@@ -11,13 +11,13 @@
       <view class="flip-face flip-front">
         <view class="emoji-big">{{word.emoji}}</view>
         <view class="word-big">{{word.spell}}</view>
-        <view class="phonetic">{{word.phonetic}}</view>
+        <view class="phonetic" wx:if="{{word.phonetic}}">{{word.phonetic}}</view>
         <view class="subtitle" style="margin-top:20rpx">👆 点击翻转看释义</view>
       </view>
       <!-- 背面：释义 + 例句 + 联想 + 词根 -->
       <view class="flip-face flip-back">
         <view class="meaning-big">{{word.emoji}} {{word.meaning}}</view>
-        <view class="example">{{word.example}}</view>
+        <view class="example" wx:if="{{word.example}}">{{word.example}}</view>
         <view class="mnemonic" wx:if="{{word.mnemonic}}">💡 联想：{{word.mnemonic}}</view>
         <view class="mnemonic" wx:if="{{word.root}}">🧩 词根：{{word.root}}</view>
       </view>

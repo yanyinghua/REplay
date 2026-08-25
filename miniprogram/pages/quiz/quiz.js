@@ -1,5 +1,5 @@
 // pages/quiz/quiz.js —— 主动回忆测验（新词闯关 + 到期复习共用）
-const words = require('../../data/words.js')
+const words = require('../../utils/wordbank.js')
 const store = require('../../utils/store.js')
 
 function shuffle(arr) {

@@ -1,0 +1,9 @@
+{
+  "name": "get-words",
+  "version": "1.0.0",
+  "description": "批量拉取词库词条",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

@@ -1,0 +1,43 @@
+<!-- pages/bookstore/bookstore.wxml —— 词库中心：浏览/下载/删除词库 -->
+<view class="container">
+  <view class="card">
+    <view class="title">📚 词库中心</view>
+    <view class="subtitle">内置词库离线可用，云端词库点击下载后即可学习</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="center muted" style="padding: 60rpx 0;">加载中…</view>
+
+  <view wx:elif="{{books.length === 0}}" class="card center">
+    <view class="emoji-big">🗂️</view>
+    <view class="subtitle">暂无可用词库，请在云开发控制台导入数据</view>
+  </view>
+
+  <view class="card" wx:for="{{books}}" wx:key="bookId" style="margin-bottom: 24rpx;">
+    <view class="row">
+      <view style="font-size: 64rpx; margin-right: 24rpx;">{{item.emoji}}</view>
+      <view style="flex: 1;">
+        <view class="row">
+          <view class="title" style="font-size: 34rpx;">{{item.name}}</view>
+          <view class="tag">{{item.source === 'builtin' ? '内置' : '云端'}}</view>
+        </view>
+        <view class="subtitle">{{item.desc}}</view>
+        <view style="font-size: 24rpx; color: #9aa0b4; margin-top: 8rpx;">
+          {{item.wordCount}} 词 · {{item.levelCount}} 关
+        </view>
+      </view>
+    </view>
+
+    <view style="margin-top: 24rpx;" class="row">
+      <view wx:if="{{item.source === 'builtin'}}" class="tag">已内置</view>
+      <view wx:elif="{{item.downloading}}" class="tag">下载中…</view>
+      <view wx:elif="{{item.downloaded}}" class="tag" style="background:#e6f9ec;color:#1aab5a;">✓ 已下载</view>
+      <view wx:else class="tag">未下载</view>
+
+      <view>
+        <button wx:if="{{item.source === 'cloud' && !item.downloaded}}" class="btn-ghost" style="font-size: 26rpx; padding: 10rpx 32rpx; margin: 0;" data-id="{{item.bookId}}" bindtap="download">下载</button>
+        <button wx:elif="{{item.source === 'cloud' && item.downloaded}}" class="btn-ghost" style="font-size: 26rpx; padding: 10rpx 32rpx; margin: 0; background:#ffeef0; color:#f25f5c;" data-id="{{item.bookId}}" bindtap="remove">删除</button>
+        <button wx:else class="btn-primary" style="font-size: 26rpx; padding: 10rpx 32rpx; margin: 0;" data-id="{{item.bookId}}" bindtap="openBook">学习</button>
+      </view>
+    </view>
+  </view>
+</view>

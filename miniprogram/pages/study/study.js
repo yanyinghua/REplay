@@ -1,5 +1,5 @@
 // pages/study/study.js —— 翻转卡学习（双重编码 + 趣味联想）
-const words = require('../../data/words.js')
+const words = require('../../utils/wordbank.js')
 const store = require('../../utils/store.js')
 
 Page({
@@ -11,18 +11,36 @@ Page({
   onLoad(q) {
     const bookId = q.bookId
     const level = parseInt(q.level || '0')
-    const list = words.getLevelWords(bookId, level)
-    this.setData({
-      bookId, level, words: list, total: list.length,
-      word: list[0] || {}, percent: 0
+    words.ensureBook(bookId).then(() => {
+      const list = words.getLevelWords(bookId, level)
+      this.setData({
+        bookId, level, words: list, total: list.length,
+        word: list[0] || {}, percent: 0
+      })
+    }).catch(err => {
+      wx.showToast({ title: err.message || '加载词库失败', icon: 'none' })
+      setTimeout(() => wx.navigateBack(), 800)
     })
   },
 
   flip() { this.setData({ flipped: !this.data.flipped }) },
 
+  // 播放单词发音（有道词典免费发音接口）
   speak() {
-    // M1 占位：真实发音需接入 TTS（云函数 / 词典音频）。这里提示音标。
-    wx.showToast({ title: this.data.word.phonetic, icon: 'none' })
+    const w = this.data.word.spell
+    if (!w) return
+    if (this.audioCtx) this.audioCtx.destroy()
+    const audio = wx.createInnerAudioContext()
+    this.audioCtx = audio
+    audio.src = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(w) + '&type=1'
+    audio.play()
+    audio.onError(() => {
+      wx.showToast({ title: '发音加载失败，请检查网络', icon: 'none' })
+    })
+  },
+
+  onUnload() {
+    if (this.audioCtx) this.audioCtx.destroy()
   },
 
   known() {
