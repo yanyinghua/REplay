@@ -64,7 +64,8 @@ Page({
   openBook(e) {
     const id = e.currentTarget.dataset.id
     wordbank.ensureBook(id).then(() => {
-      wx.navigateTo({ url: `/pages/study/study?bookId=${id}&level=0` })
+      // 先进入选词页，勾选想学的单词再开始学习
+      wx.navigateTo({ url: `/pages/pick/pick?bookId=${id}` })
     }).catch(err => {
       wx.showToast({ title: err.message || '打开失败', icon: 'none' })
     })

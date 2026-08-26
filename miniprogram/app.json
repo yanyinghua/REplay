@@ -14,7 +14,8 @@
     "pages/pkroom/pkroom",
     "pages/map/map",
     "pages/mine/mine",
-    "pages/bookstore/bookstore"
+    "pages/bookstore/bookstore",
+    "pages/pick/pick"
   ],
   "window": {
     "navigationBarTitleText": "单词记忆",
@@ -22,6 +23,7 @@
     "navigationBarTextStyle": "white",
     "backgroundColor": "#f5f6fa"
   },
+  "lazyCodeLoading": "requiredComponents",
   "tabBar": {
     "color": "#999999",
     "selectedColor": "#4f6ef7",

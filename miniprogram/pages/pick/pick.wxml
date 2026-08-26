@@ -1,0 +1,66 @@
+<view class="container" style="padding-bottom:180rpx" wx:if="{{ready}}">
+  <!-- 顶部：书名 + 已选数量 -->
+  <view class="row" style="margin-bottom:16rpx">
+    <view>
+      <view class="title">{{book.emoji}} {{book.name}}</view>
+      <view class="subtitle" style="margin-top:8rpx">勾选单词：认识的 → 标记已学跳过；不认识的 → 开始学习，共 {{total}} 个</view>
+      <view class="subtitle" style="margin-top:6rpx">🔒 已学过的单词默认锁定不可再选，双击可解锁重学</view>
+    </view>
+  </view>
+
+  <!-- 搜索 + 快捷操作 -->
+  <view class="row" style="margin-bottom:20rpx">
+    <view class="search-box">
+      <input placeholder="🔍 搜索单词或释义" value="{{keyword}}" bindinput="onSearch" bindconfirm="onSearch" confirm-type="search" style="flex:1;font-size:28rpx"/>
+      <view class="search-clear" wx:if="{{keyword}}" bindtap="clearSearch">✕</view>
+    </view>
+  </view>
+  <view class="row" style="margin-bottom:20rpx">
+    <view class="tag" bindtap="selectAll">✅ 全选</view>
+    <view class="tag" bindtap="clearAll">🗑 清空</view>
+    <view class="tag {{unlockMode ? 'tag-on' : ''}}" bindtap="toggleUnlockMode">🔓 批量解锁</view>
+    <view class="subtitle" style="margin:0">{{unlockMode ? '待解锁 ' + unlockCount + ' 个' : '已选 ' + selCount + ' 个'}}</view>
+  </view>
+
+  <!-- 批量解锁模式提示 -->
+  <view class="unlock-banner" wx:if="{{unlockMode}}">批量解锁模式：点击已学单词选中（可多选/全选），点底部「解锁已选」移出已学习库；再次点击「🔓 批量解锁」退出</view>
+
+  <!-- 单词列表 -->
+  <view class="pick-item card {{item.learned ? 'locked' : ''}}" wx:for="{{shown}}" wx:key="id"
+        bindtap="tick" data-id="{{item.id}}" data-idx="{{index}}">
+    <view style="flex:1;min-width:0">
+      <view style="font-size:34rpx;font-weight:600">{{item.spell}}</view>
+      <view class="muted" style="font-size:22rpx;margin-top:6rpx;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{item.meaning}}</view>
+    </view>
+    <view class="pick-check {{item.checked ? 'on' : ''}} {{item.learned ? 'lock' : ''}}">{{item.learned ? '🔒' : (item.checked ? '✓' : '')}}</view>
+  </view>
+
+  <view class="center" style="padding:20rpx 0 40rpx">
+    <text class="muted" wx:if="{{!hasMore}}">— 已全部加载 —</text>
+    <text class="muted" wx:else>上滑加载更多…</text>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="pick-bar" wx:if="{{unlockMode}}">
+    <view class="pick-bar-info">
+      <view style="font-size:34rpx;font-weight:700">{{unlockCount}}</view>
+      <view class="muted" style="font-size:22rpx">待解锁</view>
+    </view>
+    <button class="btn-gray" style="flex:1;margin:0 0 0 24rpx" bindtap="toggleUnlockMode">✕ 取消</button>
+    <button class="btn-unlock" style="flex:1;margin:0 0 0 16rpx" bindtap="unlockBatch">🔓 解锁已选 ({{unlockCount}})</button>
+  </view>
+  <view class="pick-bar" wx:else>
+    <view class="pick-bar-info">
+      <view style="font-size:34rpx;font-weight:700">{{selCount}}</view>
+      <view class="muted" style="font-size:22rpx">已选单词</view>
+    </view>
+    <button class="btn-mark" style="flex:1;margin:0 0 0 24rpx" bindtap="markLearned">✅ 标记已学</button>
+    <button class="btn-primary" style="flex:1;margin:0 0 0 16rpx" bindtap="start">开始学习 →</button>
+  </view>
+</view>
+
+<!-- 加载中 -->
+<view class="container center" wx:else>
+  <view style="font-size:80rpx;margin:120rpx 0 24rpx">📚</view>
+  <view class="subtitle">词库加载中…</view>
+</view>

@@ -5,6 +5,7 @@ const store = require('../../utils/store.js')
 
 const SCOPES = [
   { key: 'total', label: '总榜', unit: '经验' },
+  { key: 'learned', label: '词汇榜', unit: '词' },
   { key: 'streak', label: '坚持榜', unit: '天' },
   { key: 'book', label: '词库榜', unit: '⭐' },
 ]

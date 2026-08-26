@@ -1,0 +1,56 @@
+/* 操作手切换（顶部） */
+.hand-toggle {
+  font-size: 24rpx;
+  color: #4f6ef7;
+  background: #eef1ff;
+  border-radius: 999rpx;
+  padding: 6rpx 22rpx;
+  margin-left: 16rpx;
+}
+
+/* 底部操作区：两列，各容纳大按钮 + 竖向操作组 */
+.study-actions {
+  display: flex;
+  margin-top: 32rpx;
+  align-items: flex-start;
+}
+.study-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+.study-side + .study-side { margin-left: 24rpx; }
+
+.study-side .btn-ghost, .study-side .btn-primary {
+  width: 100%;
+  margin: 0;
+  box-sizing: border-box;
+}
+.notknown-btn {
+  border: 2rpx solid #ff6b6b;
+  color: #ff6b6b;
+  background: #fff0f0;
+}
+.notknown-btn::after { border: none; }
+
+/* 竖向操作组：翻面 / 发音 / 上一个 */
+.mini-actions {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: 16rpx;
+}
+.mini-btn {
+  background: #f0f2f8;
+  color: #5a607a;
+  border: 1rpx solid #e4e8f2;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  padding: 14rpx 0;
+  margin-top: 12rpx;
+  text-align: center;
+}
+.mini-btn:active { background: #e2e6f2; }
+.mini-btn.disabled { opacity: 0.35; }

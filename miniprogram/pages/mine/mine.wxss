@@ -9,3 +9,16 @@
 .badge { width: 140rpx; text-align: center; }
 .badge-icon { font-size: 56rpx; }
 .badge-name { font-size: 22rpx; color: #666; margin-top: 6rpx; }
+
+/* 近 7 天学习趋势柱状图 */
+.chart { display: flex; align-items: flex-end; justify-content: space-between; margin-top: 8rpx; }
+.chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; }
+.chart-num { font-size: 20rpx; color: #4f6ef7; height: 28rpx; line-height: 28rpx; font-weight: 600; }
+.chart-bar-wrap { height: 150rpx; display: flex; align-items: flex-end; }
+.chart-bar {
+  width: 36rpx;
+  background: linear-gradient(180deg, #4f6ef7, #8b9dff);
+  border-radius: 10rpx 10rpx 4rpx 4rpx;
+}
+.chart-bar.zero { background: #e4e8f2; }
+.chart-date { font-size: 20rpx; color: #999; margin-top: 8rpx; }

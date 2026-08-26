@@ -17,6 +17,7 @@ exports.main = async (e) => {
 // 取排序字段与单位
 function fieldOf(scope, bookId) {
   if (scope === 'streak') return { field: 'streak', unit: '天' };
+  if (scope === 'learned') return { field: 'learnedTotal', unit: '词' };
   if (scope === 'book') return { field: `bookProgress.${bookId}.stars`, unit: '⭐' };
   return { field: 'exp', unit: '经验' };
 }

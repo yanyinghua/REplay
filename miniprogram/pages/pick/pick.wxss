@@ -1,0 +1,110 @@
+/* 选词页 */
+.search-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 999rpx;
+  padding: 16rpx 28rpx;
+  box-shadow: 0 6rpx 24rpx rgba(79, 110, 247, 0.08);
+}
+.search-clear {
+  color: #9aa0b4;
+  font-size: 28rpx;
+  padding: 0 8rpx;
+}
+
+.pick-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 28rpx;
+  margin-bottom: 16rpx;
+}
+.pick-check {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  border: 3rpx solid #d3d8ec;
+  color: #fff;
+  font-size: 28rpx;
+  line-height: 40rpx;
+  text-align: center;
+  margin-left: 16rpx;
+  flex-shrink: 0;
+}
+.pick-check.on {
+  background: #4f6ef7;
+  border-color: #4f6ef7;
+}
+/* 已学单词：锁定不可选（双击解锁） */
+.pick-item.locked {
+  opacity: .6;
+  background: #f4f6fb;
+}
+.pick-check.lock {
+  border-color: #c8cddd;
+  background: #eef1f8;
+  color: #8a92a8;
+  line-height: 42rpx;
+  font-size: 26rpx;
+}
+
+/* 底部固定栏 */
+.btn-mark {
+  background: linear-gradient(135deg, #34c77b, #1fa97e);
+  color: #fff;
+  border-radius: 999rpx;
+  font-size: 30rpx;
+  padding: 20rpx 0;
+  border: none;
+  line-height: 1.5;
+  box-shadow: 0 6rpx 16rpx rgba(52, 199, 123, 0.25);
+}
+.btn-unlock {
+  background: linear-gradient(135deg, #ff9f43, #ff6b6b);
+  color: #fff;
+  border-radius: 999rpx;
+  font-size: 30rpx;
+  padding: 20rpx 0;
+  border: none;
+  line-height: 1.5;
+  box-shadow: 0 6rpx 16rpx rgba(255, 107, 107, 0.25);
+}
+.btn-gray {
+  background: #f0f2f8;
+  color: #5a607a;
+  border-radius: 999rpx;
+  font-size: 30rpx;
+  padding: 20rpx 0;
+  border: none;
+  line-height: 1.5;
+}
+.tag-on {
+  background: #4f6ef7;
+  color: #fff;
+  border: none;
+}
+.unlock-banner {
+  background: #fff7ec;
+  color: #b06e1a;
+  font-size: 24rpx;
+  line-height: 1.5;
+  padding: 16rpx 24rpx;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+  border: 1rpx solid #ffe0b2;
+}
+.pick-bar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  display: flex;
+  align-items: center;
+  background: #fff;
+  padding: 20rpx 32rpx calc(20rpx + env(safe-area-inset-bottom));
+  box-shadow: 0 -6rpx 24rpx rgba(79, 110, 247, 0.1);
+}
+.pick-bar-info {
+  display: flex;
+  align-items: baseline;
+  gap: 8rpx;
+}

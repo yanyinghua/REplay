@@ -170,9 +170,15 @@ function saveToFile(bookId, words) {
 
 // 下载云端词库到本地（文件缓存 + 内存池）
 // 优先走 get-words 云函数（1000 条/次），云函数未部署时回退直连数据库分页
+// 版本校验：云端 books.version 高于本地缓存版本时自动重新拉取（如词库数据更新后）
 function download(bookId) {
   ensureInit()
-  if (POOL[bookId]) return Promise.resolve(POOL[bookId])
+  const downloaded = wx.getStorageSync(DOWNLOADED_KEY) || {}
+  const local = downloaded[bookId] || 0
+  const meta = CLOUD.find(c => c.bookId === bookId)
+  const remote = (meta && meta.version) || 1
+  // 已下载且版本一致 → 直接用本地缓存
+  if (POOL[bookId] && remote <= local) return Promise.resolve(POOL[bookId])
   if (!wx.cloud || !wx.cloud.database) return Promise.reject(new Error('云开发不可用'))
   const db = wx.cloud.database()
 
@@ -198,9 +204,7 @@ function download(bookId) {
     if (!words.length) throw new Error('词库为空')
     saveToFile(bookId, words)
     POOL[bookId] = words
-    const downloaded = wx.getStorageSync(DOWNLOADED_KEY) || {}
-    const meta = CLOUD.find(c => c.bookId === bookId)
-    downloaded[bookId] = (meta && meta.version) || 1
+    downloaded[bookId] = remote
     wx.setStorageSync(DOWNLOADED_KEY, downloaded)
     rebuildBooks()
     return words
@@ -219,6 +223,44 @@ function remove(bookId) {
   rebuildBooks()
 }
 
+// ---------- 自定义选词集（词库中心/词库页勾选想学的词后学习） ----------
+function setPickIds(bookId, ids) {
+  try { wx.setStorageSync('pick_words_' + bookId, ids || []) } catch (e) {}
+}
+function getPickIds(bookId) {
+  try { return wx.getStorageSync('pick_words_' + bookId) || [] } catch (e) { return [] }
+}
+
+// ---------- 已学单词（学习过默认锁定不可再选，双击解锁后可重新选择） ----------
+function getLearnedIds(bookId) {
+  try { return wx.getStorageSync('learned_words_' + bookId) || [] } catch (e) { return [] }
+}
+function saveLearnedIds(bookId, ids) {
+  try { wx.setStorageSync('learned_words_' + bookId, ids || []) } catch (e) {}
+}
+function addLearned(bookId, id) {
+  const set = new Set(getLearnedIds(bookId))
+  set.add(id)
+  saveLearnedIds(bookId, Array.from(set))
+}
+function addLearnedBatch(bookId, ids) {
+  if (!ids || !ids.length) return
+  const set = new Set(getLearnedIds(bookId))
+  ids.forEach(id => set.add(id))
+  saveLearnedIds(bookId, Array.from(set))
+}
+function removeLearnedBatch(bookId, ids) {
+  if (!ids || !ids.length) return
+  const set = new Set(getLearnedIds(bookId))
+  ids.forEach(id => set.delete(id))
+  saveLearnedIds(bookId, Array.from(set))
+}
+function removeLearned(bookId, id) {
+  const set = new Set(getLearnedIds(bookId))
+  set.delete(id)
+  saveLearnedIds(bookId, Array.from(set))
+}
+
 // 确保词库就绪（内置：同步就绪；云端：先查内存/文件，未下载则拉取）
 function ensureBook(bookId) {
   ensureInit()
@@ -232,5 +274,7 @@ module.exports = {
   LEVEL_SIZE,
   getBooks, getWords, getWord, getLevelWords, getLevelCount,
   isBuiltin, isCloud, isDownloaded,
-  loadCloudBooks, download, remove, ensureBook
+  loadCloudBooks, download, remove, ensureBook,
+  setPickIds, getPickIds,
+  getLearnedIds, addLearned, addLearnedBatch, removeLearned, removeLearnedBatch
 }

@@ -28,15 +28,8 @@ Page({
   openBook(e) {
     const id = e.currentTarget.dataset.id
     words.ensureBook(id).then(() => {
-      // 定位到第一个未通关的关卡
-      const cnt = words.getLevelCount(id)
-      let level = 0
-      const prog = store.getBookProgress(id)
-      for (let i = 0; i < cnt; i++) {
-        if (!(prog.levels && prog.levels[i] && prog.levels[i].passed)) { level = i; break }
-        if (i === cnt - 1) level = cnt - 1
-      }
-      wx.navigateTo({ url: `/pages/study/study?bookId=${id}&level=${level}` })
+      // 先进入选词页：勾选不认识的单词，再开始学习
+      wx.navigateTo({ url: `/pages/pick/pick?bookId=${id}` })
     }).catch(err => {
       wx.showToast({ title: err.message || '打开失败', icon: 'none' })
     })

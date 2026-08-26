@@ -91,10 +91,43 @@ function saveLevelResult(bookId, levelIdx, stars, accuracy) {
 function markLearned(bookId, n) {
   const all = getProgress()
   const bk = all[bookId] || { levels: {}, learned: 0 }
-  bk.learned = (bk.learned || 0) + n
+  bk.learned = Math.max(0, (bk.learned || 0) + n)
   all[bookId] = bk
   wx.setStorageSync(PROG_KEY, all)
+  if (n > 0) addDailyLearned(n)   // 记录每日学习量（解锁扣减不影响今日）
 }
+
+/* ---------- 每日学习统计 ---------- */
+const DAILY_KEY = 'daily_learn'
+function todayKey() {
+  const d = new Date()
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
+}
+function getDailyLearnedMap() { return wx.getStorageSync(DAILY_KEY) || {} }
+function addDailyLearned(n) {
+  if (!n) return
+  const all = getDailyLearnedMap()
+  const k = todayKey()
+  all[k] = (all[k] || 0) + n
+  wx.setStorageSync(DAILY_KEY, all)
+}
+function getTodayLearned() { return getDailyLearnedMap()[todayKey()] || 0 }
+// 近 N 天每日已学（用于图表），返回 [{ date: 'MM-DD', count }]
+function getRecentDaily(n) {
+  const all = getDailyLearnedMap()
+  const list = []
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 86400000)
+    const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
+    list.push({ date: String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'), count: all[key] || 0 })
+  }
+  return list
+}
+
+/* ---------- 操作手设置（学习按钮左右布局） ---------- */
+const HAND_KEY = 'hand_mode'
+function getHandMode() { return wx.getStorageSync(HAND_KEY) || 'right' }
+function setHandMode(mode) { wx.setStorageSync(HAND_KEY, mode === 'left' ? 'left' : 'right') }
 
 /* ---------- 错词本 ---------- */
 // 返回所有“答错过”的词 id（lapses > 0）
@@ -123,5 +156,7 @@ module.exports = {
   getProfile, saveProfile, addReward, checkIn,
   expForLevel, levelFromExp,
   getProgress, getBookProgress, saveLevelResult, markLearned,
-  getWrongWordIds, gradeWrongMode, removeFromWrong
+  getWrongWordIds, gradeWrongMode, removeFromWrong,
+  getHandMode, setHandMode,
+  getTodayLearned, getRecentDaily
 }
