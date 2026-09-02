@@ -15,7 +15,7 @@ const BADGE_DEFS = [
 ]
 
 Page({
-  data: { level: 1, expInLevel: 0, need: 200, expPercent: 0, coin: 0, streak: 0, learned: 0, badges: [], wrongCount: 0, hand: 'right', todayLearned: 0, bookStats: [], daily7: [], daily7Max: 0, interestText: '' },
+  data: { level: 1, expInLevel: 0, need: 200, expPercent: 0, coin: 0, streak: 0, learned: 0, badges: [], wrongCount: 0, hand: 'right', todayLearned: 0, bookStats: [], daily7: [], daily7Max: 0, interestText: '', nick: '', avatar: '', editing: false, editAvatar: '', editNick: '' },
 
   onShow() { this.refresh() },
 
@@ -40,7 +40,9 @@ Page({
       todayLearned: store.getTodayLearned(),
       bookStats: this.buildBookStats(prog),
       daily7: store.getRecentDaily(7),
-      interestText: trending.interestText()
+      interestText: trending.interestText(),
+      nick: (p && p.nickName) || '',
+      avatar: (p && p.avatarUrl) || ''
     })
     this.setData({ daily7Max: this.data.daily7.reduce((m, d) => Math.max(m, d.count), 0) })
   },
@@ -64,6 +66,56 @@ Page({
   goMistakes() { wx.navigateTo({ url: '/pages/mistakes/mistakes' }) },
   goCurve() { wx.navigateTo({ url: '/pages/curve/curve' }) },
   goInterests() { wx.navigateTo({ url: '/pages/interests/interests' }) },
+
+  // ---------- 编辑资料：微信官方「头像昵称填写能力」（chooseAvatar + input type=nickname） ----------
+  openEdit() {
+    this.setData({ editing: true, editAvatar: this.data.avatar || '', editNick: this.data.nick || '' })
+  },
+  closeEdit() { this.setData({ editing: false }) },
+  noop() {},
+  onChooseAvatar(e) {
+    const t = (e.detail && e.detail.avatarUrl) || ''
+    if (t) this.setData({ editAvatar: t })
+  },
+  onNickInput(e) { this.setData({ editNick: e.detail.value }) },
+  saveInfo() {
+    const nick = (this.data.editNick || '').trim()
+    const cur = this.data.avatar || ''
+    const picked = this.data.editAvatar || ''
+    const nickChanged = nick !== (this.data.nick || '')
+    const avatarChanged = !!picked && picked !== cur
+    if (!nickChanged && !avatarChanged) {
+      wx.showToast({ title: '还没有修改内容', icon: 'none' })
+      return
+    }
+    const persist = (avatarUrl) => {
+      const p = store.getProfile()
+      if (nick) p.nickName = nick
+      else delete p.nickName
+      if (avatarUrl) p.avatarUrl = avatarUrl
+      store.saveProfile(p) // 内部会触发云同步（user-sync）
+      this.setData({ editing: false, avatar: avatarUrl || cur, nick })
+      wx.showToast({ title: '已保存', icon: 'success' })
+    }
+    // 头像选了新图（本地临时文件）→ 上传云存储拿 fileID，换设备/重装后也能显示
+    if (avatarChanged && picked.indexOf('cloud://') !== 0) {
+      wx.showLoading({ title: '上传头像…', mask: true })
+      const dot = picked.lastIndexOf('.')
+      const ext = dot > -1 ? picked.slice(dot + 1).split('?')[0].toLowerCase() : 'png'
+      wx.cloud.uploadFile({
+        cloudPath: 'avatars/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext,
+        filePath: picked
+      }).then(res => {
+        wx.hideLoading()
+        persist((res && res.fileID) || picked)
+      }).catch(() => {
+        wx.hideLoading()
+        persist(picked) // 云上传失败：先本地生效，之后随 profile 上云（临时路径仅本机可见）
+      })
+      return
+    }
+    persist(picked)
+  },
 
   setHand(e) {
     const hand = e.currentTarget.dataset.hand

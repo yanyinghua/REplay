@@ -30,8 +30,8 @@ Page({
     dueCount: 0, retention: 100, wrongCount: 0, todayLearned: 0,
     checkinText: '今日未打卡', checkinBonus: 12,
     haveResume: false, resumeText: '', resumeSub: '',
-    hotItems: [], hotIdx: 0, hotLabel: '',
-    hotAuto: true, // 热点自动轮播（可手动暂停/继续）
+    hotItems: [], hotShow: [], hotIdx: 0, cur: 0, hotLabel: '',
+    hotAuto: true, hotAni: true, // 自动轮播标记 + 过渡是否开启；hotShow = 条目 + 首条副本(无缝循环)
     pop: null      // 点词释义浮层（与阅读器一致）
   },
 
@@ -63,19 +63,113 @@ Page({
         if (toks.length > 18) toks = toks.slice(0, 18).concat([{ i: -1, w: '…' }])
         return Object.assign({}, it, { toks })
       })
+      // 无缝循环：轨道末尾补一条首项副本，滚到副本后原位复位回第 0 条
+      const show = ready.length ? ready.concat([Object.assign({}, ready[0], { key: '__loop' })]) : []
+      this.stopHotTimer()
       this.setData({
         hotItems: ready,
+        hotShow: show,
         hotLabel: text || '为你精选',
-        hotIdx: 0
-      })
+        hotIdx: 0,
+        cur: 0,
+        hotAni: true
+      }, () => this.startHotTimer())
     }).catch(() => {})
   },
 
-  onHotChange(e) { this.setData({ hotIdx: e.detail.current }) },
-  onHotDot(e) { this.setData({ hotIdx: Number(e.currentTarget.dataset.i) || 0 }) },
-  // 手指触碰（点按/滑动查看）即停掉自动轮播，方便细读当前条
-  onHotTouch() { if (this.data.hotAuto) this.setData({ hotAuto: false }) },
-  toggleHotAuto() { this.setData({ hotAuto: !this.data.hotAuto }) },
+  // ---------- 双语热点：自绘无缝轮播（原生 vertical swiper 真机自动播抖动，改用整轨 translateY） ----------
+  startHotTimer() {
+    this.stopHotTimer()
+    if (!this.data.hotAuto || this.data.hotItems.length < 2) return
+    this._hotTimer = setInterval(() => this.step(1), 3800)
+  },
+  stopHotTimer() {
+    if (this._hotTimer) { clearInterval(this._hotTimer); this._hotTimer = null }
+  },
+  // 从 no-anim 复位状态恢复过渡能力后再位移，避免同帧改 class+transform 导致跳变
+  ensureAni() {
+    return new Promise(resolve => {
+      if (this.data.hotAni) return resolve()
+      this.setData({ hotAni: true }, () => setTimeout(resolve, 30))
+    })
+  },
+  // 当前真实显示第几条（0..n-1；hotIdx===n 时显示的是首条副本）
+  realCur() {
+    const n = this.data.hotItems.length
+    return n ? this.data.hotIdx % n : 0
+  },
+  // 跳一步：dir=1 切下一条，dir=-1 回上一条
+  step(dir) {
+    const n = this.data.hotItems.length
+    if (n < 2) return
+    if (this.data.hotIdx === n) { this.snapToFirst(); return }
+    const to = this.data.hotIdx + dir
+    if (to >= 0 && to <= n) {
+      this.ensureAni().then(() => {
+        this.setData({ hotIdx: to, cur: to % n })
+      })
+      return
+    }
+    if (to < 0) {
+      // 从首条回退到末条：先无动画跳到副本位（内容=首条，肉眼不可见），再下滑一格露出末条
+      this.snapToCopy()
+      setTimeout(() => {
+        this.ensureAni().then(() => this.setData({ hotIdx: n - 1, cur: n - 1 }))
+      }, 40)
+    }
+  },
+  // 跳到副本位（无动画；副本内容 = 首条，视觉上与当前重合）
+  snapToCopy() {
+    const n = this.data.hotItems.length
+    this.setData({ hotIdx: n, cur: 0, hotAni: false })
+  },
+  // 副本位原位复位回第 0 条（无动画，内容相同所以肉眼无感）
+  snapToFirst() {
+    const n = this.data.hotItems.length
+    if (n > 1) this.setData({ hotIdx: 0, cur: 0, hotAni: false })
+  },
+  // 每次过渡结束若落在副本位，则原位复位
+  onTrackEnd() {
+    const n = this.data.hotItems.length
+    if (n > 1 && this.data.hotIdx === n) this.snapToFirst()
+  },
+  onHotDot(e) {
+    const n = this.data.hotItems.length
+    if (n < 2) return
+    const t = Number(e.currentTarget.dataset.i) || 0
+    if (t === this.realCur()) return
+    this.stopHotTimer()
+    this.ensureAni().then(() => {
+      this.setData({ hotIdx: t, cur: t })
+      if (this.data.hotAuto) this.startHotTimer()
+    })
+  },
+  // 手指触碰即暂停自动播（方便细读当前条）；上滑/下滑切换前后条
+  onHotTouchStart(e) {
+    this._tY = e.touches[0].clientY
+    if (this.data.hotAuto) {
+      this.stopHotTimer()
+      this.setData({ hotAuto: false })
+    }
+  },
+  onHotTouchMove() { /* 阻止整页跟随卡片内手势滚动 */ },
+  onHotTouchEnd(e) {
+    if (this._tY == null) return
+    const dy = e.changedTouches[0].clientY - this._tY
+    this._tY = null
+    if (Math.abs(dy) < 36) return
+    this.step(dy < 0 ? 1 : -1)
+  },
+  toggleHotAuto() {
+    if (this.data.hotAuto) {
+      this.stopHotTimer()
+      this.setData({ hotAuto: false })
+    } else {
+      this.setData({ hotAuto: true }, () => this.startHotTimer())
+    }
+  },
+  onHide() { this.stopHotTimer() },
+  onUnload() { this.stopHotTimer() },
   // ---------- 点词查义浮层（复用阅读器：本地词库 → 在线词典/翻译 → 词根兜底，可收藏生词本） ----------
   onWordTap(e) {
     const raw = e.currentTarget.dataset.w || ''

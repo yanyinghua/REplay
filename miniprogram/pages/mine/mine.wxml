@@ -1,10 +1,14 @@
 <view class="container">
-  <view class="card profile">
+  <view class="card profile" bindtap="openEdit">
     <view class="row">
-      <view class="avatar">🦊</view>
+      <view class="avatar">
+        <image wx:if="{{avatar}}" class="avatar-img" src="{{avatar}}" mode="aspectFill"></image>
+        <text wx:else>🦊</text>
+      </view>
       <view style="flex:1;margin-left:20rpx">
-        <view class="title" style="font-size:36rpx">单词侠</view>
-        <view class="subtitle">Lv.{{level}} · 连续打卡 {{streak}} 天</view>
+        <view class="title" style="font-size:36rpx">{{nick || '单词侠'}}</view>
+        <view class="subtitle" style="font-size:22rpx;margin-top:4rpx">点击设置头像 / 昵称 ✏️</view>
+        <view class="subtitle" style="margin-top:6rpx">Lv.{{level}} · 连续打卡 {{streak}} 天</view>
       </view>
       <view class="coin">🪙 {{coin}}</view>
     </view>
@@ -91,4 +95,22 @@
   </view>
 
   <button class="btn-ghost" style="margin-top:10rpx" bindtap="reset">清空本地进度（调试）</button>
+
+  <!-- 编辑资料弹层：头像昵称由用户主动填写（微信官方能力，无需授权弹窗） -->
+  <view class="mask" wx:if="{{editing}}" bindtap="closeEdit">
+    <view class="sheet" catchtap="noop">
+      <view class="sheet-title">编辑资料</view>
+      <view class="sheet-sub">头像与昵称仅在本应用内展示</view>
+      <button class="avatar-pick" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+        <view class="pick-preview">
+          <image wx:if="{{editAvatar}}" class="avatar-img" src="{{editAvatar}}" mode="aspectFill"></image>
+          <text wx:else>🦊</text>
+        </view>
+        <view class="avatar-pick-text">点击选择微信头像</view>
+      </button>
+      <input class="nick-input" type="nickname" placeholder="填个昵称（可一键填入微信昵称）"
+             value="{{editNick}}" bindinput="onNickInput" maxlength="24" />
+      <view class="mine-save" bindtap="saveInfo">保 存</view>
+    </view>
+  </view>
 </view>

@@ -78,11 +78,14 @@
       </view>
 
       <view wx:if="{{hotItems.length === 0}}" class="hot-tip">正在加载今日热点…</view>
-      <swiper wx:else class="hot-swiper" vertical circular autoplay="{{hotAuto && hotItems.length > 1}}"
-              current="{{hotIdx}}" interval="3800" duration="500" bindchange="onHotChange"
-              bindtouchstart="onHotTouch">
-        <swiper-item wx:for="{{hotItems}}" wx:key="key">
-          <view class="hot-item">
+      <!-- 无缝轮播：整条轨道 + translateY 过渡；末尾补首条副本用于循环复位（真机稳定不抖） -->
+      <!-- 注意：不可用 catchtouchstart/catchtouchend，否则微信会吞掉子元素 bindtap（点词失效） -->
+      <view wx:else class="hot-swiper" bindtouchstart="onHotTouchStart"
+            bindtouchend="onHotTouchEnd" catchtouchmove="onHotTouchMove">
+        <view class="hot-track {{hotAni ? '' : 'no-anim'}}"
+              style="transform: translateY(-{{hotIdx * 220}}rpx);"
+              bindtransitionend="onTrackEnd">
+          <view class="hot-item" wx:for="{{hotShow}}" wx:key="key">
             <view class="hot-tag">{{item.catName}}</view>
             <!-- 分词渲染：点句中任意单词查词典 -->
             <view class="hot-en">
@@ -91,11 +94,11 @@
             </view>
             <view class="hot-zh">{{item.zh || '点选句中任一单词，即可查词典'}}</view>
           </view>
-        </swiper-item>
-      </swiper>
+        </view>
+      </view>
       <view class="hot-foot" wx:if="{{hotItems.length > 1}}">
         <view class="hot-dots">
-          <view class="dot {{di === hotIdx ? 'on' : ''}}" wx:for="{{hotItems}}" wx:key="key"
+          <view class="dot {{di === cur ? 'on' : ''}}" wx:for="{{hotItems}}" wx:key="key"
                 wx:for-item="d" wx:for-index="di" data-i="{{di}}" bindtap="onHotDot"></view>
         </view>
         <view class="hot-ctrl {{hotAuto ? '' : 'paused'}}" catchtap="toggleHotAuto">{{hotAuto ? '⏸ 暂停' : '▶ 继续'}}</view>

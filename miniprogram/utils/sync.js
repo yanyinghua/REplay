@@ -167,11 +167,16 @@ function mergeProfiles(local, remote) {
   const lastCheckin = Math.max((local && local.lastCheckin) || 0, remote.lastCheckin || 0)
   const badges = {}
   ;((local && local.badges) || []).concat(remote.badges || []).forEach(b => { badges[b] = 1 })
+  // 展示资料（昵称/头像）：本地为空则取云端，保证换设备/重装后能同步显示
+  const nick = (local && local.nickName) || remote.nickName || ''
+  const avatarUrl = (local && local.avatarUrl) || remote.avatarUrl || ''
   return {
     exp, coin, streak, lastCheckin,
     badges: Object.keys(badges),
     level: Math.max(Math.floor(exp / 200) + 1, (remote.level || 1), ((local && local.level) || 1)),
-    createdAt: Math.min((local && local.createdAt) || Date.now(), remote.createdAt || Date.now())
+    createdAt: Math.min((local && local.createdAt) || Date.now(), remote.createdAt || Date.now()),
+    nickName: nick,
+    avatarUrl: avatarUrl
   }
 }
 

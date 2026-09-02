@@ -139,8 +139,13 @@
   max-width: 220rpx;
 }
 .hh-set { font-size: 24rpx; color: #9aa0b4; flex-shrink: 0; }
-.hot-swiper { height: 220rpx; }
-.hot-item { height: 220rpx; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; }
+.hot-swiper { height: 220rpx; overflow: hidden; }
+.hot-track {
+  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+.hot-track.no-anim { transition: none; }
+.hot-item { height: 220rpx; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
 .hot-tag {
   align-self: flex-start;
   font-size: 20rpx;
