@@ -37,11 +37,12 @@ function localVersion(novelId) {
 }
 
 function readLocalFile(novelId) {
+  // 没下载记录就不去碰文件，避免真机调试里抛出一堆 access 红字
+  if (localVersion(novelId) <= 0) return null
   try {
     const p = `${DIR}/${novelId}.json`
-    if (fs.accessSync(p) === undefined) {
-      return JSON.parse(fs.readFileSync(p, 'utf8'))
-    }
+    fs.accessSync(p)
+    return JSON.parse(fs.readFileSync(p, 'utf8'))
   } catch (e) {}
   return null
 }
