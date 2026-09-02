@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/launch/launch",
+    "pages/login/login",
     "pages/home/home",
     "pages/books/books",
     "pages/study/study",

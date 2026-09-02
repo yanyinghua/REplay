@@ -1,0 +1,14 @@
+<view class="login">
+  <view class="brand">
+    <view class="logo">📚</view>
+    <view class="app-name">单词记忆</view>
+    <view class="slogan">记得住 · 玩得久 · 能社交</view>
+  </view>
+
+  <view class="card">
+    <view class="btn-login {{loading ? 'disabled' : ''}}" bindtap="onLogin">
+      {{loading ? '登录中…' : '微信一键登录'}}
+    </view>
+    <view class="tip">登录后学习进度自动云端同步，换设备不丢失</view>
+  </view>
+</view>

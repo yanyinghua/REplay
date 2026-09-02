@@ -1,0 +1,36 @@
+.login {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #4f6ef7, #7b5cf0);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 70rpx;
+  box-sizing: border-box;
+}
+.brand {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.logo { font-size: 150rpx; line-height: 1.2; }
+.app-name { color: #fff; font-size: 56rpx; font-weight: 800; margin-top: 20rpx; }
+.slogan { color: rgba(255,255,255,0.85); font-size: 28rpx; margin-top: 16rpx; }
+.card {
+  width: 100%;
+  padding-bottom: calc(70rpx + env(safe-area-inset-bottom));
+}
+.btn-login {
+  background: #fff;
+  color: #4f6ef7;
+  font-size: 34rpx;
+  font-weight: 700;
+  height: 96rpx;
+  line-height: 96rpx;
+  text-align: center;
+  border-radius: 48rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.12);
+}
+.btn-login.disabled { opacity: 0.7; }
+.tip { color: rgba(255,255,255,0.85); font-size: 24rpx; text-align: center; margin-top: 24rpx; }
