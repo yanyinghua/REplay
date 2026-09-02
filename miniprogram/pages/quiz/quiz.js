@@ -1,6 +1,7 @@
 // pages/quiz/quiz.js —— 主动回忆测验（新词闯关 + 到期复习共用）
 const words = require('../../utils/wordbank.js')
 const store = require('../../utils/store.js')
+const typeface = require('../../utils/typeface.js')
 
 function shuffle(arr) {
   const a = arr.slice()
@@ -18,7 +19,13 @@ Page({
     selected: '', answered: false, correct: 0,
     feedback: '', percent: 0, sentenceText: '',
     finished: false, accuracy: 0, stars: 0,
-    gainExp: 0, gainCoin: 0, leveledUp: false, newLevel: 1
+    gainExp: 0, gainCoin: 0, leveledUp: false, newLevel: 1,
+    faceStack: typeface.loadStack()  // 题目/选项字体（与学习页同一偏好）
+  },
+
+  // 字体选择组件上抛时应用
+  onFace(e) {
+    this.setData({ faceStack: e.detail.stack })
   },
 
   onLoad(q) {

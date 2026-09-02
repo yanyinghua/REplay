@@ -73,6 +73,14 @@
     <view class="muted">›</view>
   </view>
 
+  <view class="card row" bindtap="goInterests" style="margin-top:10rpx">
+    <view>
+      <view class="title" style="font-size:32rpx">🎯 我的兴趣</view>
+      <view class="subtitle">{{interestText ? interestText : '点击选择，首页热点将按兴趣推送'}}</view>
+    </view>
+    <view class="muted">›</view>
+  </view>
+
   <view class="card" style="margin-top:10rpx">
     <view class="title" style="font-size:32rpx">✋ 操作手</view>
     <view class="subtitle">学习时「翻面 / 发音 / 上一个」按钮竖排的位置</view>

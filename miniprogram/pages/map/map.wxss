@@ -1,3 +1,18 @@
+.resume-card {
+  display: flex; align-items: center; justify-content: space-between;
+  background: linear-gradient(135deg, #4f6ef7, #7c5cff);
+  border-radius: 24rpx; padding: 28rpx 32rpx; margin-bottom: 28rpx;
+  box-shadow: 0 8rpx 24rpx rgba(79, 110, 247, 0.25);
+}
+.resume-title { color: #fff; font-size: 32rpx; font-weight: 700; }
+.resume-tip { color: rgba(255, 255, 255, 0.85); font-size: 24rpx; margin-top: 6rpx; }
+.resume-go {
+  background: rgba(255, 255, 255, 0.95); color: #4f6ef7;
+  font-weight: 700; font-size: 26rpx;
+  padding: 14rpx 30rpx; border-radius: 999rpx;
+  flex-shrink: 0;
+}
+
 .levels { display: flex; flex-wrap: wrap; gap: 16rpx; }
 .level-cell {
   width: 120rpx; height: 120rpx;

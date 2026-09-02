@@ -1,0 +1,7 @@
+{
+  "name": "dict",
+  "version": "1.0.0",
+  "description": "在线查词与中英互译（有道词典 + MyMemory）",
+  "main": "index.js",
+  "dependencies": {}
+}

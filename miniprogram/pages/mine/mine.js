@@ -1,6 +1,7 @@
 // pages/mine/mine.js
 const store = require('../../utils/store.js')
 const words = require('../../utils/wordbank.js')
+const trending = require('../../utils/trending.js')
 
 const BADGE_DEFS = [
   { name: '初出茅庐', icon: '🌱', test: (s) => s.learned >= 10 },
@@ -14,7 +15,7 @@ const BADGE_DEFS = [
 ]
 
 Page({
-  data: { level: 1, expInLevel: 0, need: 200, expPercent: 0, coin: 0, streak: 0, learned: 0, badges: [], wrongCount: 0, hand: 'right', todayLearned: 0, bookStats: [], daily7: [], daily7Max: 0 },
+  data: { level: 1, expInLevel: 0, need: 200, expPercent: 0, coin: 0, streak: 0, learned: 0, badges: [], wrongCount: 0, hand: 'right', todayLearned: 0, bookStats: [], daily7: [], daily7Max: 0, interestText: '' },
 
   onShow() { this.refresh() },
 
@@ -38,7 +39,8 @@ Page({
       hand: store.getHandMode(),
       todayLearned: store.getTodayLearned(),
       bookStats: this.buildBookStats(prog),
-      daily7: store.getRecentDaily(7)
+      daily7: store.getRecentDaily(7),
+      interestText: trending.interestText()
     })
     this.setData({ daily7Max: this.data.daily7.reduce((m, d) => Math.max(m, d.count), 0) })
   },
@@ -61,6 +63,7 @@ Page({
 
   goMistakes() { wx.navigateTo({ url: '/pages/mistakes/mistakes' }) },
   goCurve() { wx.navigateTo({ url: '/pages/curve/curve' }) },
+  goInterests() { wx.navigateTo({ url: '/pages/interests/interests' }) },
 
   setHand(e) {
     const hand = e.currentTarget.dataset.hand

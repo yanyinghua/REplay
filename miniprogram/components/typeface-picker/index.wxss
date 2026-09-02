@@ -1,0 +1,48 @@
+/* components/typeface-picker/index.wxss */
+.tpf { display: inline-flex; align-items: center; }
+.tpf-btn {
+  width: 60rpx; height: 60rpx; border-radius: 50%;
+  background: linear-gradient(135deg, #4f6ef7, #7b5cf0);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(79, 110, 247, 0.25);
+}
+.tpf-icon {
+  font-family: Georgia, serif; font-style: italic;
+  font-size: 26rpx; line-height: 1;
+}
+
+/* 底部面板 */
+.tpf-mask {
+  position: fixed; left: 0; top: 0; right: 0; bottom: 0;
+  z-index: 300; background: rgba(20, 20, 30, 0.5);
+  display: flex; align-items: flex-end;
+}
+.tpf-sheet {
+  width: 100%; box-sizing: border-box;
+  background: #fff; border-radius: 32rpx 32rpx 0 0;
+  padding: 36rpx 36rpx calc(36rpx + env(safe-area-inset-bottom));
+}
+.tpf-head { display: flex; align-items: center; justify-content: space-between; }
+.tpf-title { font-size: 34rpx; font-weight: 800; color: #2c2c3a; }
+.tpf-sub { font-size: 22rpx; color: #9aa0b4; margin-top: 4rpx; }
+.tpf-close {
+  width: 56rpx; height: 56rpx; border-radius: 50%;
+  background: #f0f1f5; color: #8a8f9e;
+  display: flex; align-items: center; justify-content: center;
+}
+.tpf-list { margin-top: 20rpx; max-height: 56vh; overflow-y: auto; }
+.tpf-item {
+  display: flex; align-items: center;
+  border: 2rpx solid #eef0f4; border-radius: 20rpx;
+  padding: 16rpx 20rpx; margin-bottom: 16rpx;
+}
+.tpf-item.on { border-color: #4f6ef7; background: #f4f6ff; }
+.tpf-emoji { font-size: 44rpx; margin-right: 20rpx; flex-shrink: 0; }
+.tpf-main { flex: 1; min-width: 0; }
+.tpf-name { font-size: 28rpx; font-weight: 700; color: #3a3d4a; }
+.tpf-sample {
+  font-size: 28rpx; color: #6b7085; margin-top: 6rpx;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tpf-check { color: #4f6ef7; font-weight: 900; font-size: 32rpx; margin-left: 16rpx; }

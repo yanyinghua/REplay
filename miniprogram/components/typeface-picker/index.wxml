@@ -1,0 +1,31 @@
+<!-- components/typeface-picker/index.wxml —— Aa 按钮 + 字体底部面板 -->
+<view class="tpf">
+  <view class="tpf-btn" bindtap="open">
+    <text class="tpf-icon">Aa</text>
+  </view>
+
+  <!-- 字体选择面板 -->
+  <view class="tpf-mask" wx:if="{{open}}" bindtap="close" catchtouchmove="noop">
+    <view class="tpf-sheet" catchtap="noop">
+      <view class="tpf-head">
+        <view>
+          <view class="tpf-title">正文字体</view>
+          <view class="tpf-sub">换一种字体，换一种心情</view>
+        </view>
+        <view class="tpf-close" bindtap="close">✕</view>
+      </view>
+      <view class="tpf-list">
+        <view wx:for="{{fonts}}" wx:key="id"
+              class="tpf-item {{curId === item.id ? 'on' : ''}}"
+              data-id="{{item.id}}" bindtap="pick">
+          <view class="tpf-emoji">{{item.emoji}}</view>
+          <view class="tpf-main">
+            <view class="tpf-name">{{item.name}}</view>
+            <view class="tpf-sample" style="font-family:{{item.stack}}">The quick brown fox jumps</view>
+          </view>
+          <view class="tpf-check" wx:if="{{curId === item.id}}">✓</view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

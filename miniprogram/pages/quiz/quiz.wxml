@@ -1,8 +1,11 @@
 <!-- 测验中 -->
-<view class="container" wx:if="{{!finished && total > 0}}">
+<view class="container" wx:if="{{!finished && total > 0}}" style="font-family:{{faceStack}}">
   <view class="row" style="margin-bottom:8rpx">
     <view class="subtitle">第 {{index+1}} / {{total}} 题</view>
-    <view class="subtitle">✅ {{correct}}</view>
+    <view class="row right" style="margin:0">
+      <typeface-picker bind:change="onFace" style="margin-right:20rpx"/>
+      <view class="subtitle">✅ {{correct}}</view>
+    </view>
   </view>
   <view class="bar" style="margin-bottom:20rpx"><view class="bar-fill" style="width:{{percent}}%"></view></view>
 
@@ -10,6 +13,7 @@
     <!-- 句子练习：看例句选词填空 -->
     <block wx:if="{{mode === 'sentence'}}">
       <view class="sentence-text">{{sentenceText}}</view>
+      <view class="sentence-zh" wx:if="{{word.exampleZh}}">{{word.exampleZh}}</view>
       <view class="phonetic" style="margin-top:12rpx">{{word.phonetic}}</view>
       <view class="subtitle" style="margin-top:16rpx">选出正确的单词填入空格 👇</view>
     </block>

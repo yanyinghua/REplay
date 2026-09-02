@@ -1,0 +1,133 @@
+<!-- pages/search/search.wxml —— 单词搜索（本地词库 + 在线词典/翻译） -->
+<view class="spage">
+  <!-- 搜索栏 -->
+  <view class="sbar">
+    <view class="sbox">
+      <view class="sicon">🔍</view>
+      <input class="sin" value="{{kw}}" placeholder="单词 / 短语 / 中文，如 apple / I am fine / 苹果"
+             placeholder-class="ph" confirm-type="search"
+             bindinput="onInput" focus="{{autoFocus}}" />
+      <view class="sclear" wx:if="{{kw}}" bindtap="onClear">✕</view>
+    </view>
+    <view class="sgo" bindtap="back">取消</view>
+  </view>
+
+  <!-- 词库准备中 -->
+  <view wx:if="{{!ready}}" class="hint">正在准备词库…</view>
+
+  <!-- 空输入提示 -->
+  <view wx:elif="{{!kw}}" class="hint">
+    <view class="tip-emoji">🔎</view>
+    <view>就像词典一样随便输：</view>
+    <view>前缀 <text class="kw">ab</text> → abandon / about</view>
+    <view>包含 <text class="kw">rain</text> → brain / train</view>
+    <view>任意词 <text class="kw">apple</text> → 在线词典</view>
+    <view>整句 <text class="kw">I am fine</text>、中文 → 在线翻译</view>
+  </view>
+
+  <!-- 查询区 -->
+  <block wx:else>
+    <!-- 在线：加载中 -->
+    <view wx:if="{{onlineLoading}}" class="oline">🌐 正在联网查词…</view>
+
+    <!-- 在线：词典结果 -->
+    <block wx:elif="{{online && online.mode === 'dict'}}">
+      <view class="ecard">
+        <view class="e-head">
+          <view class="e-title">
+            <text class="e-word">{{online.word}}</text>
+            <text class="e-src">在线词典</text>
+          </view>
+          <view class="e-speak" catchtap="speak" data-w="{{online.word}}">🔊</view>
+        </view>
+        <view class="e-pho" wx:if="{{online.usPhonetic || online.ukPhonetic}}">
+          <text wx:if="{{online.ukPhonetic}}" class="pho-item">英 /{{online.ukPhonetic}}/</text>
+          <text wx:if="{{online.usPhonetic}}" class="pho-item">美 /{{online.usPhonetic}}/</text>
+        </view>
+        <view class="e-forms" wx:if="{{online.forms.length}}">
+          <text wx:for="{{online.forms}}" wx:key="name" class="echip">{{item.name}} {{item.value}}</text>
+        </view>
+        <view class="e-senses" wx:if="{{online.senses.length}}">
+          <view wx:for="{{online.senses}}" wx:key="*this" class="e-sense">{{item}}</view>
+        </view>
+        <view class="e-ex" wx:if="{{online.examples.length}}">
+          <view class="e-ex-item" wx:for="{{online.examples}}" wx:key="en">
+            <view class="e-ex-en">{{item.en}}</view>
+            <view class="e-ex-zh">{{item.zh}}</view>
+          </view>
+        </view>
+
+        <!-- 收藏：加入我的生词本，继续走学习/复习闭环 -->
+        <view class="e-ops" wx:if="{{online.senses.length}}">
+          <block wx:if="{{myState === 'in'}}">
+            <view class="op-row">
+              <view class="op-btn op-in" catchtap="removeFromBox">✓ 已在生词本 · 点按移出</view>
+              <view class="op-study" bindtap="goStudyBox">去学习（{{myCount}}）→</view>
+            </view>
+          </block>
+          <block wx:elif="{{myState === 'none'}}">
+            <view class="op-row">
+              <view class="op-btn op-add" catchtap="addToBox">⭐ 加入生词本</view>
+              <view class="op-study" wx:if="{{myCount > 0}}" bindtap="goStudyBox">去学习（{{myCount}}）→</view>
+            </view>
+          </block>
+          <block wx:else>
+            <view class="op-tip">📚 该词已被本地词库收录，点下方列表条目即可学习</view>
+          </block>
+        </view>
+      </view>
+    </block>
+
+    <!-- 在线：翻译结果 -->
+    <block wx:elif="{{online && online.mode === 'translate'}}">
+      <view class="ecard">
+        <view class="e-head">
+          <view class="e-title">
+            <text class="e-src">{{online.from === 'zh' ? '中文→英文' : '英文→中文'}}</text>
+          </view>
+        </view>
+        <view class="e-src-text">{{online.text}}</view>
+        <view class="e-tgt">{{online.translated}}</view>
+      </view>
+    </block>
+
+    <!-- 在线：失败（点按重试） -->
+    <view wx:elif="{{onlineErr}}" class="oerr" bindtap="retryOnline">
+      <view>{{onlineErr}}</view>
+      <view class="oerr-go">⟳ 点此重试</view>
+    </view>
+
+    <!-- 本地词库结果 -->
+    <view class="l-head" wx:if="{{results.length}}">📚 本地词库（{{results.length}}）</view>
+    <view class="rlist" wx:if="{{results.length}}">
+      <view wx:for="{{results}}" wx:key="key" class="ritem"
+            data-key="{{item.key}}" bindtap="toggle">
+        <view class="rmain">
+          <view class="rrow">
+            <text class="rspell">{{item.word.spell}}</text>
+            <text class="rbook">{{item.bookEmoji}} {{item.bookName}}</text>
+          </view>
+          <view class="rpho" wx:if="{{item.word.phonetic}}">{{item.word.phonetic}}</view>
+          <view class="rmean">{{item.word.meaning}}</view>
+          <block wx:if="{{expanded === item.key}}">
+            <view class="rfull">
+              <view class="rex" wx:if="{{item.word.example}}">{{item.word.example}}</view>
+              <view class="rexz" wx:if="{{item.word.exampleZh}}">{{item.word.exampleZh}}</view>
+              <view class="rmini" wx:if="{{item.word.mnemonic}}">💡 联想：{{item.word.mnemonic}}</view>
+              <view class="rmini" wx:if="{{item.word.root}}">🧩 词根：{{item.word.root}}</view>
+            </view>
+          </block>
+        </view>
+        <view class="rspeak" catchtap="speak" data-w="{{item.word.spell}}">🔊</view>
+      </view>
+    </view>
+    <view class="count" wx:if="{{results.length}}">本地命中 {{results.length}} 条 · 点条目展开例句</view>
+
+    <!-- 完全没有结果 -->
+    <view wx:if="{{results.length === 0 && !onlineLoading && !online && !onlineErr}}" class="hint">
+      <view class="tip-emoji">🍃</view>
+      <view>本地词库没收录「{{kw}}」</view>
+      <view>英文单词/句子或中文会自动走在线词典哦</view>
+    </view>
+  </block>
+</view>

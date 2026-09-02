@@ -1,21 +1,50 @@
+<!-- pages/books/books.wxml —— 词库页（选择词库去学习） -->
 <view class="container">
-  <view class="row" style="margin-bottom:16rpx">
+  <!-- 顶栏：搜索 + 词库中心 -->
+  <view class="topbar">
     <view>
-      <view class="title">选择词库</view>
-      <view class="subtitle" style="margin-top:8rpx">分级 / 主题 / 自定义，挑你感兴趣的来背</view>
+      <view class="title">📚 我的词库</view>
+      <view class="subtitle" style="margin-top:8rpx">已装 {{books.length}} 本 · 选一本开始闯关</view>
     </view>
-    <view class="tag" style="background:#4f6ef7; color:#fff; padding:10rpx 24rpx; margin-right:0;" bindtap="goStore">＋ 更多词库</view>
+    <view style="display:flex;align-items:center">
+      <view class="search-btn" bindtap="goSearch">🔍</view>
+    </view>
   </view>
 
-  <view class="book card" wx:for="{{books}}" wx:key="bookId" bindtap="openBook" data-id="{{item.bookId}}">
-    <view class="book-emoji" style="background:{{item.color}}22">{{item.emoji}}</view>
-    <view class="book-main">
-      <view class="row">
-        <view class="title" style="font-size:34rpx">{{item.name}}</view>
-        <view class="muted">{{item.learned}}/{{item.total}} 词</view>
-      </view>
-      <view class="subtitle" style="margin-top:6rpx">{{item.desc}}</view>
-      <view class="bar" style="margin-top:14rpx"><view class="bar-fill" style="width:{{item.percent}}%"></view></view>
+  <!-- 醒目「更多词库」入口 -->
+  <view class="store-card" bindtap="goStore">
+    <view class="store-emoji">🛍️</view>
+    <view class="store-main">
+      <view class="store-t">发现更多词库</view>
+      <view class="store-s">小学 · 初中 · 高中 · 大学 · 四六级 · 托福雅思 … 免费下载离线学</view>
     </view>
+    <view class="store-go">去逛 ›</view>
+  </view>
+
+  <!-- 书卡列表 -->
+  <view class="book" wx:for="{{books}}" wx:key="bookId" bindtap="openBook" data-id="{{item.bookId}}">
+    <view class="cover" style="background:linear-gradient(160deg, {{item.color}}, {{item.color}}85)">{{item.emoji}}</view>
+    <view class="info">
+      <view class="row">
+        <view class="b-name">{{item.name}}</view>
+        <view class="b-pct">{{item.percent}}%</view>
+      </view>
+      <view class="b-desc">{{item.desc}}</view>
+      <view class="bar"><view class="bar-fill" style="width:{{item.percent}}%"></view></view>
+      <view class="row" style="margin-top:12rpx">
+        <view class="b-meta">已学 {{item.learned}} / {{item.total}} 词</view>
+        <view class="b-go">去学习 ›</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 阅读精选引流 -->
+  <view class="read-banner" bindtap="goRead">
+    <view class="rb-emoji">📖</view>
+    <view class="rb-main">
+      <view class="rb-t">双语阅读 · 名著中英对照</view>
+      <view class="rb-s">背累了？读一章原文放松一下</view>
+    </view>
+    <view class="rb-go">去书库 ›</view>
   </view>
 </view>

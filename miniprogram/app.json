@@ -15,7 +15,11 @@
     "pages/map/map",
     "pages/mine/mine",
     "pages/bookstore/bookstore",
-    "pages/pick/pick"
+    "pages/pick/pick",
+    "pages/library/library",
+    "pages/read/read",
+    "pages/search/search",
+    "pages/interests/interests"
   ],
   "window": {
     "navigationBarTitleText": "单词记忆",
@@ -36,5 +40,8 @@
     ]
   },
   "sitemapLocation": "sitemap.json",
-  "style": "v2"
+  "style": "v2",
+  "usingComponents": {
+    "typeface-picker": "/components/typeface-picker/index"
+  }
 }

@@ -1,0 +1,9 @@
+{
+  "name": "daily-trending",
+  "version": "1.0.0",
+  "description": "每日双语热点内容流（懒生成：抓取英文热点头条 + 翻译入库，每日一份）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

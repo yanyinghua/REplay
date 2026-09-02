@@ -2,6 +2,15 @@
   <view class="title" style="margin-bottom:8rpx">关卡地图</view>
   <view class="subtitle" style="margin-bottom:16rpx">每关 10 词，闯关得星 ⭐</view>
 
+  <!-- 继续学习：从上次断点接着学，通关后自动顺延下一关 -->
+  <view class="resume-card" wx:if="{{resume}}" bindtap="goResume">
+    <view class="resume-left">
+      <view class="resume-title">▶️ 继续学习</view>
+      <view class="resume-tip">{{resume.emoji}} {{resume.name}} · 第 {{resume.level + 1}} 关</view>
+    </view>
+    <view class="resume-go">去学习</view>
+  </view>
+
   <view class="card" wx:for="{{books}}" wx:key="bookId">
     <view class="row" style="margin-bottom:16rpx">
       <view class="title" style="font-size:32rpx">{{item.emoji}} {{item.name}}</view>

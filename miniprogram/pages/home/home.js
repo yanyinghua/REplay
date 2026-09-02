@@ -1,38 +1,269 @@
-// pages/home/home.js
+// pages/home/home.js —— 首页：打卡 + 每日任务 + 双语阅读/玩法入口
 const store = require('../../utils/store.js')
 const ret = require('../../utils/retention.js')
 const words = require('../../utils/wordbank.js')
+const dict = require('../../utils/dict.js')
+const trending = require('../../utils/trending.js')
+
+// 常见屈折变形 → 词根候选（仅作本地词库兜底，与阅读器一致）
+function guessRoot(spell) {
+  const s = String(spell).toLowerCase()
+  const out = []
+  const add = t => { if (t && t !== s && t.length > 2 && out.indexOf(t) < 0) out.push(t) }
+  if (s.length > 4 && /ies$/.test(s)) add(s.slice(0, -3) + 'y')          // cities → city
+  if (s.length > 3 && s.endsWith('es')) add(s.slice(0, -2))              // buses → bus
+  if (s.length > 3 && s.endsWith('s') && !s.endsWith('ss')) add(s.slice(0, -1)) // dogs → dog
+  if (s.length > 4 && s.endsWith('ed')) { add(s.slice(0, -2)); add(s.slice(0, -1)) } // played→play, liked→like
+  if (s.length > 5 && s.endsWith('ing')) {
+    add(s.slice(0, -3))                                                  // going → go
+    add(s.slice(0, -3) + 'e')                                            // making → make
+    const d = s.slice(0, -3)
+    if (d.length > 2 && d.charAt(d.length - 1) === d.charAt(d.length - 2)) add(d.slice(0, -1)) // running→run
+  }
+  return out
+}
 
 Page({
   data: {
     level: 1, expInLevel: 0, need: 200, expPercent: 0,
-    coin: 0, streak: 0,
-    dueCount: 0, retention: 100, wrongCount: 0,
-    checkinText: '今日未打卡', checkinBonus: 12
+    coin: 0, streak: 0, checked: false,
+    dueCount: 0, retention: 100, wrongCount: 0, todayLearned: 0,
+    checkinText: '今日未打卡', checkinBonus: 12,
+    haveResume: false, resumeText: '', resumeSub: '',
+    hotItems: [], hotIdx: 0, hotLabel: '',
+    hotAuto: true, // 热点自动轮播（可手动暂停/继续）
+    pop: null      // 点词释义浮层（与阅读器一致）
   },
 
-  onShow() { this.refresh() },
+  onShow() {
+    this.refresh()
+    this.loadHot()
+    this.maybeGuide()
+  },
+
+  // 首次进入且未设置兴趣 → 引导选择（可跳过；之后「我的」页可改）
+  maybeGuide() {
+    try {
+      if (wx.getStorageSync('interest_guided')) return
+      if (store.getInterestTags().length) return
+      // 先落标记再跳转：即使从引导页按返回键退出，也不会每次回来都弹
+      wx.setStorageSync('interest_guided', '1')
+      wx.navigateTo({ url: '/pages/interests/interests?guide=1' })
+    } catch (e) {}
+  },
+
+  // 今日双语热点流（云端 → 离线兜底），按兴趣过滤后滚动展示
+  loadHot() {
+    trending.loadFeed().then(r => {
+      const list = (r && r.items) || []
+      const text = trending.interestText()
+      // 热点句本身已带中文译文，点击只查句中单词，故逐词拆开渲染
+      const ready = list.map(it => {
+        let toks = String(it.en || '').split(/\s+/).filter(Boolean).map((w, i) => ({ i, w }))
+        if (toks.length > 18) toks = toks.slice(0, 18).concat([{ i: -1, w: '…' }])
+        return Object.assign({}, it, { toks })
+      })
+      this.setData({
+        hotItems: ready,
+        hotLabel: text || '为你精选',
+        hotIdx: 0
+      })
+    }).catch(() => {})
+  },
+
+  onHotChange(e) { this.setData({ hotIdx: e.detail.current }) },
+  onHotDot(e) { this.setData({ hotIdx: Number(e.currentTarget.dataset.i) || 0 }) },
+  // 手指触碰（点按/滑动查看）即停掉自动轮播，方便细读当前条
+  onHotTouch() { if (this.data.hotAuto) this.setData({ hotAuto: false }) },
+  toggleHotAuto() { this.setData({ hotAuto: !this.data.hotAuto }) },
+  // ---------- 点词查义浮层（复用阅读器：本地词库 → 在线词典/翻译 → 词根兜底，可收藏生词本） ----------
+  onWordTap(e) {
+    const raw = e.currentTarget.dataset.w || ''
+    const w = raw.replace(/[^A-Za-z’'\-]+$/g, '').trim()
+    if (!w || w === '…') return
+    this._tok = (this._tok || 0) + 1
+    const tok = this._tok
+
+    // ① 本地词库命中 → 秒出
+    const found = words.searchBySpell(w)
+    if (found) {
+      this.setData({ pop: this.buildLocalPop(found) })
+      return
+    }
+
+    // ② 未收录 → 先显示查词中，同时做词形猜测 + 在线词典
+    this.setData({
+      pop: {
+        word: w, pho: '', emoji: '📖', meaning: '', sub: '',
+        examples: [], loading: true, mine: '', mbox: null
+      }
+    })
+    const root = guessRoot(w).map(x => words.searchBySpell(x)).find(Boolean) || null
+    dict.lookupOnline(w).then(res => {
+      if (tok !== this._tok) return // 已关浮层或点了别的词，丢弃过期结果
+      if (res && res.ok) {
+        this.setData({ pop: this.buildOnlinePop(w, res) })
+        return
+      }
+      // ③ 在线不可用/查不到 → 词根命中给个参考
+      if (root) {
+        const p = this.buildLocalPop(root)
+        p.word = w
+        p.sub = '由 “' + root.spell + '” 变形而来（离线释义）'
+        this.setData({ pop: p })
+        return
+      }
+      this.setData({
+        pop: {
+          word: w, pho: '', emoji: '🔍',
+          meaning: '本地词库与在线词典都没查到这个词。',
+          sub: '离线场景可先结合上下文猜词义；联网并部署 dict 云函数后即可查到任意生词。',
+          examples: [], loading: false, mine: 'err', mbox: null
+        }
+      })
+    })
+  },
+
+  // 本地词条 → 浮层
+  buildLocalPop(f) {
+    const ex = f.example ? [{ en: f.example, zh: f.exampleZh || '' }] : []
+    return {
+      word: f.spell,
+      pho: f.phonetic || '',
+      emoji: f.emoji || '🔤',
+      meaning: f.meaning || '',
+      sub: f.root ? '词根：' + f.root : '',
+      examples: ex,
+      loading: false,
+      mine: words.hasMyboxWord(f.spell) ? 'in' : 'local', // 词库已收录，无需重复收藏
+      mbox: { phonetic: f.phonetic || '', meaning: f.meaning || '', example: f.example || '', exampleZh: f.exampleZh || '' }
+    }
+  },
+
+  // 在线词典 / 翻译结果 → 浮层
+  buildOnlinePop(w, res) {
+    if (res.mode === 'translate') {
+      const translated = String(res.translated || '').trim()
+      const spell = w.toLowerCase()
+      return {
+        word: w,
+        pho: '', emoji: '🔤',
+        meaning: translated || '（在线翻译未返回结果）',
+        sub: '在线译文（大意）',
+        examples: [], loading: false,
+        mine: words.hasMyboxWord(spell) ? 'in' : 'none',
+        mbox: { phonetic: '', meaning: translated, example: '', exampleZh: '' }
+      }
+    }
+    // mode === 'dict'
+    const us = res.usPhonetic ? ('美 /' + res.usPhonetic + '/') : ''
+    const uk = res.ukPhonetic ? ('英 /' + res.ukPhonetic + '/') : ''
+    const pho = [us, uk].filter(Boolean).join('  ')
+    const senses = (res.senses || []).slice(0, 5)
+    const exs = (res.examples || []).slice(0, 2).map(x => ({ en: x.en || '', zh: x.zh || '' }))
+    const spell = String(res.word || w).toLowerCase()
+    return {
+      word: res.word || w,
+      pho, emoji: '📘',
+      meaning: senses.join('；') || '（未返回释义）',
+      sub: '来自 ' + (res.source || '在线词典'),
+      examples: exs,
+      loading: false,
+      mine: words.hasMyboxWord(spell) ? 'in' : 'none',
+      mbox: {
+        phonetic: pho,
+        meaning: (res.senses || []).slice(0, 2).join('；'),
+        example: exs[0] ? exs[0].en : '',
+        exampleZh: exs[0] ? exs[0].zh : ''
+      }
+    }
+  },
+
+  // 收藏 / 移出生词本
+  toggleBox() {
+    const pop = this.data.pop
+    if (!pop || pop.loading || !pop.word || !pop.mbox) return
+    if (pop.mine === 'in') {
+      words.removeMyboxWord(pop.word)
+      this.setData({ 'pop.mine': 'none' })
+      wx.showToast({ title: '已移出生词本', icon: 'none' })
+      return
+    }
+    if (pop.mine !== 'none') return
+    const mb = pop.mbox
+    const r = words.addMyboxWord({
+      spell: pop.word,
+      phonetic: mb.phonetic || '',
+      meaning: mb.meaning || pop.meaning || '',
+      example: mb.example || '',
+      exampleZh: mb.exampleZh || ''
+    })
+    if (r && r.ok) {
+      this.setData({ 'pop.mine': 'in' })
+      wx.showToast({ title: '⭐ 已加入我的生词本', icon: 'none' })
+    } else if (r && r.exists) {
+      this.setData({ 'pop.mine': 'in' })
+      wx.showToast({ title: '这个单词已在生词本里啦', icon: 'none' })
+    } else {
+      wx.showToast({ title: '收藏失败，请重试', icon: 'none' })
+    }
+  },
+
+  // 发音（有道 TTS，网页可访问不依赖合法域名）
+  speak(e) {
+    const w = e.currentTarget.dataset.w || this.data.pop.word
+    if (!w) return
+    if (this.audioCtx) this.audioCtx.destroy()
+    const audio = wx.createInnerAudioContext()
+    this.audioCtx = audio
+    audio.src = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(w) + '&type=1'
+    audio.play()
+    audio.onError(() => wx.showToast({ title: '发音加载失败，请检查网络', icon: 'none' }))
+  },
+
+  closePop() {
+    this._tok = (this._tok || 0) + 1 // 使在途查询结果失效
+    if (this.audioCtx) { this.audioCtx.destroy(); this.audioCtx = null }
+    this.setData({ pop: null })
+  },
+  noop() {},
+  goInterests() { wx.navigateTo({ url: '/pages/interests/interests' }) },
 
   refresh() {
     const p = store.getProfile()
     const expInLevel = p.exp % 200
     const need = 200
     const dueIds = store.getDueWordIds()
-    // 留存率：已学词中未到期的比例
+    const due = dueIds.length
     const all = wx.getStorageSync('srs_state') || {}
     const learned = Object.keys(all).length
-    const due = dueIds.length
     const retention = learned === 0 ? 100 : Math.round(ret.overallRetention(all, Date.now()) * 100)
-    // 今日是否已打卡
     const today = new Date(); today.setHours(0, 0, 0, 0)
     const checked = p.lastCheckin && new Date(p.lastCheckin).setHours(0, 0, 0, 0) === today.getTime()
+    // 「继续学习」断点 → 主按钮文案
+    let haveResume = false
+    let resumeText = ''
+    let resumeSub = ''
+    const pos = store.loadLastPos()
+    if (pos && words.isDownloaded(pos.bookId)) {
+      const book = words.getBooks().find(b => b.bookId === pos.bookId)
+      if (book) {
+        haveResume = true
+        const maxLv = Math.max(1, words.getLevelCount(pos.bookId))
+        const next = Math.min(pos.level + 1, maxLv)
+        resumeText = book.name
+        resumeSub = `上次学到第 ${next} 关，接着学`
+      }
+    }
     this.setData({
       level: p.level, expInLevel, need, expPercent: Math.round(expInLevel / need * 100),
-      coin: p.coin, streak: p.streak,
+      coin: p.coin, streak: p.streak, checked,
       dueCount: due, retention: Math.max(0, Math.min(100, retention)),
       wrongCount: store.getWrongWordIds().length,
+      todayLearned: store.getTodayLearned(),
       checkinText: checked ? '今日已打卡 ✅' : '点击完成今日打卡',
-      checkinBonus: (p.streak + 1) * 2 + 10
+      checkinBonus: (p.streak + 1) * 2 + 10,
+      haveResume, resumeText, resumeSub
     })
   },
 
@@ -43,7 +274,10 @@ Page({
     this.refresh()
   },
 
+  goSearch() { wx.navigateTo({ url: '/pages/search/search' }) },
   goBooks() { wx.switchTab({ url: '/pages/books/books' }) },
+  goStore() { wx.navigateTo({ url: '/pages/bookstore/bookstore' }) },
+  goLibrary() { wx.navigateTo({ url: '/pages/library/library' }) },
   goMistakes() { wx.navigateTo({ url: '/pages/mistakes/mistakes' }) },
   goCurve() { wx.navigateTo({ url: '/pages/curve/curve' }) },
   goPK() { wx.navigateTo({ url: '/pages/pkroom/pkroom?bookId=daily&level=0' }) },

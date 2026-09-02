@@ -1,100 +1,168 @@
-<view class="container">
-  <!-- 用户状态卡 -->
-  <view class="card profile">
-    <view class="row">
+<!-- pages/home/home.wxml —— 新版首页 -->
+<view class="home">
+  <!-- Hero：等级/经验/打卡 -->
+  <view class="hero">
+    <!-- 搜索入口 -->
+    <view class="h-search" bindtap="goSearch">
+      <view class="hs-ico">🔍</view>
+      <view class="hs-t">搜单词 / 查释义 / 翻译</view>
+      <view class="hs-go">词典 ›</view>
+    </view>
+
+    <view class="h-top">
       <view>
-        <view class="title">👋 你好，单词侠</view>
-        <view class="subtitle">Lv.{{level}} · 连续打卡 {{streak}} 天</view>
+        <view class="h-hello">Hello, 单词侠 👋</view>
+        <view class="h-sub">Lv.{{level}} · 已连续打卡 {{streak}} 天</view>
       </view>
-      <view class="coin">🪙 {{coin}}</view>
+      <view class="h-coin">🪙 {{coin}}</view>
     </view>
-    <view class="subtitle" style="margin-top:16rpx">经验值 {{expInLevel}}/{{need}}</view>
-    <view class="bar" style="margin-top:8rpx"><view class="bar-fill" style="width:{{expPercent}}%"></view></view>
-  </view>
 
-  <!-- 打卡 -->
-  <view class="card row" bindtap="onCheckIn">
-    <view>
-      <view class="title" style="font-size:32rpx">每日打卡</view>
-      <view class="subtitle">{{checkinText}}</view>
+    <view class="h-exp">
+      <view class="h-exp-row">
+        <text>Lv.{{level}} 经验</text>
+        <text>{{expInLevel}} / {{need}}</text>
+      </view>
+      <view class="bar light-bar"><view class="bar-fill" style="width:{{expPercent}}%"></view></view>
     </view>
-    <view class="btn-ghost" style="width:180rpx">打卡 +{{checkinBonus}}</view>
-  </view>
 
-  <!-- 今日复习 (SRS) -->
-  <view class="card" bindtap="goReview">
-    <view class="row">
-      <view class="title" style="font-size:34rpx">🔁 今日复习</view>
-      <view class="stars">{{dueCount}} 个到期</view>
-    </view>
-    <view class="subtitle" style="margin-top:8rpx">
-      {{dueCount > 0 ? '趁还没忘，赶紧巩固一下～' : '太棒了，暂时没有到期词 🎉'}}
-    </view>
-    <view class="bar" style="margin-top:16rpx"><view class="bar-fill" style="width:{{retention}}%"></view></view>
-    <view class="subtitle" style="margin-top:8rpx">记忆留存约 {{retention}}%（复习越多越牢）</view>
-  </view>
-
-  <!-- 错词本 -->
-  <view class="card row" bindtap="goMistakes">
-    <view>
-      <view class="title" style="font-size:32rpx">❌ 错词本</view>
-      <view class="subtitle">{{wrongCount > 0 ? wrongCount + ' 个易错词待巩固' : '暂无错词，太棒了'}}</view>
-    </view>
-    <view class="muted">›</view>
-  </view>
-
-  <!-- 记忆曲线 -->
-  <view class="card row" bindtap="goCurve">
-    <view>
-      <view class="title" style="font-size:32rpx">📈 记忆曲线</view>
-      <view class="subtitle">当前记忆留存约 {{retention}}%</view>
-    </view>
-    <view class="muted">›</view>
-  </view>
-
-  <!-- 实时 PK -->
-  <view class="card row" bindtap="goPK">
-    <view>
-      <view class="title" style="font-size:32rpx">⚔️ PK 对战</view>
-      <view class="subtitle">实时匹配，抢答比拼</view>
-    </view>
-    <view class="muted">›</view>
-  </view>
-
-  <!-- 排行榜 -->
-  <view class="card row" bindtap="goRank">
-    <view>
-      <view class="title" style="font-size:32rpx">🏆 排行榜</view>
-      <view class="subtitle">总榜 / 坚持榜 / 词库榜</view>
-    </view>
-    <view class="muted">›</view>
-  </view>
-
-  <!-- 好友 / 班级 -->
-  <view class="grid2">
-    <view class="card cell" bindtap="goFriend">
-      <view class="title" style="font-size:32rpx">👥 好友</view>
-      <view class="subtitle">关注好友 · 好友榜</view>
-    </view>
-    <view class="card cell" bindtap="goClass">
-      <view class="title" style="font-size:32rpx">🏫 班级</view>
-      <view class="subtitle">建班 · 班级榜</view>
+    <view class="checkin {{checked ? 'done' : ''}}" bindtap="onCheckIn">
+      <view class="ci-text">
+        <view class="ci-title">{{checked ? '今日已打卡 ✅' : '☀️ 每日打卡'}}</view>
+        <view class="ci-sub">{{checked ? '明天也要坚持哦' : '打卡 +' + checkinBonus + ' EXP · 连续第 ' + (streak + 1) + ' 天'}}</view>
+      </view>
+      <view class="ci-btn">{{checked ? '已完成' : '去打卡'}}</view>
     </view>
   </view>
 
-  <!-- 学习入口 -->
-  <view class="card study-entry" bindtap="goBooks">
-    <view class="title" style="font-size:34rpx">📖 开始学习</view>
-    <view class="subtitle" style="margin-top:8rpx">选词库 → 翻转卡学习 → 闯关测验</view>
-    <view class="btn-primary" style="margin-top:20rpx">选词库去学习</view>
+  <view class="main">
+    <!-- 学习主入口：有断点则继续学习 -->
+    <view class="learn-card" bindtap="goBooks">
+      <view class="lc-emoji">📖</view>
+      <view class="lc-main">
+        <view class="lc-label">{{haveResume ? '⏩ 继续学习' : '🎯 每日任务'}}</view>
+        <view class="lc-title">{{haveResume ? resumeText : '开始背单词'}}</view>
+        <view class="lc-sub">{{haveResume ? resumeSub : '今天已学 ' + todayLearned + ' 词，保持节奏'}}</view>
+      </view>
+      <view class="lc-go">GO ›</view>
+    </view>
+
+    <!-- 复习 / 错词 -->
+    <view class="duo">
+      <view class="card-soft" bindtap="goReview">
+        <view class="ds-top">
+          <text class="ds-icon">🔁</text>
+          <view class="badge {{dueCount > 0 ? 'hot' : ''}}">{{dueCount}}</view>
+        </view>
+        <view class="ds-t">今日复习</view>
+        <view class="ds-s">{{dueCount > 0 ? dueCount + ' 个词到期' : '暂无到期词'}}</view>
+      </view>
+      <view class="card-soft" bindtap="goMistakes">
+        <view class="ds-top">
+          <text class="ds-icon">❌</text>
+          <view class="badge">{{wrongCount}}</view>
+        </view>
+        <view class="ds-t">错词本</view>
+        <view class="ds-s">{{wrongCount > 0 ? wrongCount + ' 个易错词' : '太棒了没有错词'}}</view>
+      </view>
+    </view>
+
+    <!-- 今日双语热点：按兴趣滚动 -->
+    <view class="hot-card">
+      <view class="hot-head" bindtap="goInterests">
+        <view class="hh-l">
+          <text class="hh-fire">🔥</text>
+          <text class="hh-t">今日双语热点</text>
+          <text class="hh-label">{{hotLabel}}</text>
+        </view>
+        <view class="hh-set">调整 ›</view>
+      </view>
+
+      <view wx:if="{{hotItems.length === 0}}" class="hot-tip">正在加载今日热点…</view>
+      <swiper wx:else class="hot-swiper" vertical circular autoplay="{{hotAuto && hotItems.length > 1}}"
+              current="{{hotIdx}}" interval="3800" duration="500" bindchange="onHotChange"
+              bindtouchstart="onHotTouch">
+        <swiper-item wx:for="{{hotItems}}" wx:key="key">
+          <view class="hot-item">
+            <view class="hot-tag">{{item.catName}}</view>
+            <!-- 分词渲染：点句中任意单词查词典 -->
+            <view class="hot-en">
+              <text wx:for="{{item.toks}}" wx:for-item="tk" wx:key="i" class="tok"
+                    data-w="{{tk.w}}" bindtap="onWordTap">{{tk.w}}</text>
+            </view>
+            <view class="hot-zh">{{item.zh || '点选句中任一单词，即可查词典'}}</view>
+          </view>
+        </swiper-item>
+      </swiper>
+      <view class="hot-foot" wx:if="{{hotItems.length > 1}}">
+        <view class="hot-dots">
+          <view class="dot {{di === hotIdx ? 'on' : ''}}" wx:for="{{hotItems}}" wx:key="key"
+                wx:for-item="d" wx:for-index="di" data-i="{{di}}" bindtap="onHotDot"></view>
+        </view>
+        <view class="hot-ctrl {{hotAuto ? '' : 'paused'}}" catchtap="toggleHotAuto">{{hotAuto ? '⏸ 暂停' : '▶ 继续'}}</view>
+      </view>
+    </view>
+
+    <!-- 双语阅读推荐 -->
+    <view class="read-banner" bindtap="goLibrary">
+      <view>
+        <view class="rb-t">📖 双语阅读 · 名著中英对照</view>
+        <view class="rb-s">边读边点词查义，在语境里记单词</view>
+      </view>
+      <view class="rb-go">去书库 ›</view>
+    </view>
+
+    <!-- 更多玩法 -->
+    <view class="sec">更多玩法</view>
+    <view class="grid4">
+      <view class="cell" bindtap="goMap"><view class="cell-i" style="background:#eef1ff">🗺️</view><view class="cell-t">关卡</view></view>
+      <view class="cell" bindtap="goPK"><view class="cell-i" style="background:#ffeef0">⚔️</view><view class="cell-t">PK 对战</view></view>
+      <view class="cell" bindtap="goRank"><view class="cell-i" style="background:#fff5e0">🏆</view><view class="cell-t">排行榜</view></view>
+      <view class="cell" bindtap="goCurve"><view class="cell-i" style="background:#e6f9ec">📈</view><view class="cell-t">记忆曲线</view></view>
+      <view class="cell" bindtap="goFriend"><view class="cell-i" style="background:#f3e8ff">👥</view><view class="cell-t">好友</view></view>
+      <view class="cell" bindtap="goClass"><view class="cell-i" style="background:#e0f4ff">🏫</view><view class="cell-t">班级</view></view>
+      <view class="cell" bindtap="goStore"><view class="cell-i" style="background:#eaf7f0">🛍️</view><view class="cell-t">词库中心</view></view>
+      <view class="cell" bindtap="goLibrary"><view class="cell-i" style="background:#ffe9f0">📚</view><view class="cell-t">双语书库</view></view>
+    </view>
   </view>
 
-  <!-- 关卡入口 -->
-  <view class="card row" bindtap="goMap">
-    <view>
-      <view class="title" style="font-size:32rpx">🗺️ 关卡进度</view>
-      <view class="subtitle">查看已通关星星</view>
+  <!-- 热点点词释义浮层（与阅读器一致） -->
+  <view class="mask" wx:if="{{pop}}" bindtap="closePop">
+    <view class="pop" catchtap="noop">
+      <view class="pop-head">
+        <view style="font-size:64rpx;margin-right:20rpx">{{pop.emoji}}</view>
+        <view class="pop-word-wrap">
+          <view class="pop-word">{{pop.word}}</view>
+          <view class="pop-pho" wx:if="{{pop.pho}}">{{pop.pho}}</view>
+        </view>
+        <view class="pop-sound" bindtap="speak">🔊</view>
+        <view class="pop-close" bindtap="closePop">✕</view>
+      </view>
+
+      <!-- 查询中 -->
+      <view wx:if="{{pop.loading}}" class="pop-meaning loading">
+        <view class="spin"></view>
+        <text>正在查词…</text>
+      </view>
+
+      <!-- 查询完成 -->
+      <block wx:else>
+        <view class="pop-meaning">{{pop.meaning}}</view>
+        <view class="pop-sub" wx:if="{{pop.sub}}">{{pop.sub}}</view>
+
+        <block wx:if="{{pop.examples.length}}">
+          <view class="pop-example" wx:for="{{pop.examples}}" wx:key="index" wx:for-item="ex">
+            <view class="ex-en">{{ex.en}}</view>
+            <view class="ex-zh" wx:if="{{ex.zh}}">{{ex.zh}}</view>
+          </view>
+        </block>
+
+        <view class="pop-actions">
+          <view wx:if="{{pop.mine === 'none'}}" class="pbtn main" bindtap="toggleBox">⭐ 加入我的生词本</view>
+          <view wx:elif="{{pop.mine === 'in'}}" class="pbtn in" bindtap="toggleBox">✓ 已在生词本 · 点按移出</view>
+          <view wx:elif="{{pop.mine === 'local'}}" class="pbtn local">已收录在学习词库，去「词库」选学即可</view>
+          <view wx:elif="{{pop.mine === 'err'}}" class="pbtn local">部署 dict 云函数后即可查询任意生词</view>
+        </view>
+      </block>
     </view>
-    <view class="muted">›</view>
   </view>
 </view>

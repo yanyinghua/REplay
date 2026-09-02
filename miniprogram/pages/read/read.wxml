@@ -1,0 +1,116 @@
+<!-- pages/read/read.wxml —— 双语阅读器 -->
+<view class="rpage">
+  <!-- 工具栏：模式 + 字号 -->
+  <view class="toolbar">
+    <view class="modes">
+      <view class="mode {{mode === 'en' ? 'on' : ''}}" data-m="en" bindtap="setMode">EN 英文</view>
+      <view class="mode {{mode === 'dual' ? 'on' : ''}}" data-m="dual" bindtap="setMode">中英对照</view>
+      <view wx:if="{{!enOnly}}" class="mode {{mode === 'zh' ? 'on' : ''}}" data-m="zh" bindtap="setMode">中文</view>
+    </view>
+    <view class="fs">
+      <view class="fs-btn f-pop" bindtap="openFonts">Aa</view>
+      <view class="fs-btn" bindtap="fontDec">A−</view>
+      <view class="fs-btn" bindtap="fontInc">A＋</view>
+    </view>
+  </view>
+
+  <!-- 章节横向选择 -->
+  <scroll-view scroll-x class="ch-scroll" wx:if="{{chapters.length > 0}}">
+    <view class="chips">
+      <view wx:for="{{chapters}}" wx:key="seq" class="chip {{index === seq ? 'on' : ''}}"
+            data-i="{{index}}" bindtap="goCh">第{{index + 1}}章</view>
+    </view>
+  </scroll-view>
+
+  <!-- 正文 -->
+  <view class="reading" wx:if="{{!loading}}" style="font-family:{{fontFamily}}">
+    <view class="chap-title">{{chapters[seq].title}}</view>
+
+    <view class="seg" wx:for="{{segs}}" wx:key="index">
+      <!-- 英文段：分词渲染，点击任意词查询释义 -->
+      <view class="para-en" wx:if="{{mode !== 'zh'}}" style="font-size:{{fontSize}}px">
+        <text wx:for="{{item.toks}}" wx:for-item="tk" wx:key="i"
+              class="tok {{mode === 'dual' ? 'dual-tok' : ''}}"
+              data-w="{{tk.w}}" bindtap="tapWord">{{tk.w}}</text>
+      </view>
+      <view class="para-zh" wx:if="{{mode !== 'en' && item.zh}}" style="font-size:{{fontSize - 4 > 13 ? fontSize - 4 : 14}}px">{{item.zh}}</view>
+    </view>
+
+    <view class="end-note" wx:if="{{seq === chapters.length - 1}}">
+      <view class="end-emoji">🎉</view>
+      <view>本章已是全书最后一章，坚持读完很棒</view>
+    </view>
+  </view>
+
+  <!-- 翻章栏 -->
+  <view class="footer" wx:if="{{chapters.length > 0}}">
+    <view class="nav {{seq <= 0 ? 'off' : ''}}" bindtap="prevCh">‹ 上一章</view>
+    <view class="pg">{{seq + 1}} / {{chapters.length}}</view>
+    <view class="nav {{seq >= chapters.length - 1 ? 'off' : ''}}" bindtap="nextCh">下一章 ›</view>
+  </view>
+
+  <!-- 点词释义浮层：本地词库 / 在线词典 / 翻译 / 变形词根 一键查义，可收藏进生词本 -->
+  <view class="mask" wx:if="{{pop}}" bindtap="closePop">
+    <view class="pop" catchtap="noop">
+      <view class="pop-head">
+        <view style="font-size:64rpx;margin-right:20rpx">{{pop.emoji}}</view>
+        <view class="pop-word-wrap">
+          <view class="pop-word">{{pop.word}}</view>
+          <view class="pop-pho" wx:if="{{pop.pho}}">{{pop.pho}}</view>
+        </view>
+        <view class="pop-sound" bindtap="speak">🔊</view>
+        <view class="pop-close" bindtap="closePop">✕</view>
+      </view>
+
+      <!-- 查询中 -->
+      <view wx:if="{{pop.loading}}" class="pop-meaning loading">
+        <view class="spin"></view>
+        <text>正在查词…</text>
+      </view>
+
+      <!-- 查询完成 -->
+      <block wx:else>
+        <view class="pop-meaning">{{pop.meaning}}</view>
+        <view class="pop-sub" wx:if="{{pop.sub}}">{{pop.sub}}</view>
+
+        <block wx:if="{{pop.examples.length}}">
+          <view class="pop-example" wx:for="{{pop.examples}}" wx:key="index" wx:for-item="ex">
+            <view class="ex-en">{{ex.en}}</view>
+            <view class="ex-zh" wx:if="{{ex.zh}}">{{ex.zh}}</view>
+          </view>
+        </block>
+
+        <view class="pop-actions">
+          <view wx:if="{{pop.mine === 'none'}}" class="pbtn main" bindtap="toggleBox">⭐ 加入我的生词本</view>
+          <view wx:elif="{{pop.mine === 'in'}}" class="pbtn in" bindtap="toggleBox">✓ 已在生词本 · 点按移出</view>
+          <view wx:elif="{{pop.mine === 'local'}}" class="pbtn local">已收录在学习词库，去「词库」选学即可</view>
+          <view wx:elif="{{pop.mine === 'err'}}" class="pbtn local">部署 dict 云函数后即可查询任意生词</view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 字体选择面板 -->
+  <view class="mask" wx:if="{{showFonts}}" bindtap="closeFonts">
+    <view class="pop fonts-pop" catchtap="noop">
+      <view class="pop-head">
+        <view>
+          <view class="pop-title">正文字体</view>
+          <view class="pop-sub">换一种字体，换一种读书心情</view>
+        </view>
+        <view class="pop-close" bindtap="closeFonts">✕</view>
+      </view>
+      <view class="font-list">
+        <view wx:for="{{fonts}}" wx:key="id" class="font-item {{fontFamily === item.stack ? 'on' : ''}}"
+              data-stack="{{item.stack}}" bindtap="pickFont">
+          <view class="f-emoji">{{item.emoji}}</view>
+          <view class="f-main">
+            <view class="f-name">{{item.name}}</view>
+            <view class="f-sample" style="font-family:{{item.stack}}">The quick brown fox jumps</view>
+          </view>
+          <view class="f-check" wx:if="{{fontFamily === item.stack}}">✓</view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

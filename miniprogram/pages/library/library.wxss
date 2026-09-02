@@ -1,0 +1,50 @@
+.head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24rpx; }
+
+.update-bar {
+  background: #fff; border-radius: 24rpx; padding: 24rpx 28rpx;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 28rpx; box-shadow: 0 6rpx 24rpx rgba(79,110,247,0.08);
+}
+.upd-t { font-size: 30rpx; font-weight: 700; }
+.upd-s { font-size: 22rpx; color: #9aa0b4; margin-top: 6rpx; }
+.upd-right { display: flex; align-items: center; }
+.upd-btn {
+  background: #eef1ff; color: #4f6ef7; font-size: 24rpx;
+  padding: 10rpx 22rpx; border-radius: 999rpx; margin-right: 12rpx;
+}
+
+.book {
+  background: #fff; border-radius: 24rpx; padding: 28rpx;
+  margin-bottom: 24rpx; display: flex; align-items: center;
+  box-shadow: 0 6rpx 24rpx rgba(79,110,247,0.08);
+}
+.cover {
+  width: 132rpx; height: 176rpx; border-radius: 20rpx;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 72rpx; color: #fff; flex-shrink: 0;
+  box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.12);
+}
+.main { flex: 1; margin-left: 26rpx; min-width: 0; }
+.b-title { font-size: 32rpx; font-weight: 700; word-break: break-word; }
+.b-en { font-size: 22rpx; color: #7b5cf0; margin-top: 4rpx; word-break: break-word; }
+.b-author { font-size: 22rpx; color: #9aa0b4; margin-top: 6rpx; }
+.b-desc {
+  font-size: 24rpx; color: #6b7085; line-height: 1.5;
+  margin-top: 8rpx; display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+  word-break: break-word;
+}
+.b-info { font-size: 22rpx; color: #9aa0b4; margin-top: 8rpx; }
+
+.tag-new {
+  background: #ffe7e0; color: #e26d5a; flex-shrink: 0;
+}
+.ops { display: flex; flex-direction: column; align-items: flex-end; margin-left: 10rpx; }
+.op {
+  font-size: 24rpx; padding: 10rpx 26rpx; border-radius: 999rpx; margin-top: 10rpx;
+}
+.op-dl { background: linear-gradient(135deg,#4f6ef7,#7b5cf0); color: #fff; }
+.op-read { background: #eef1ff; color: #4f6ef7; }
+.op-del { background: #ffeef0; color: #f25f5c; }
+
+.tip-line { font-size: 22rpx; color: #b0b5c6; line-height: 1.6; padding: 8rpx 8rpx 40rpx; }

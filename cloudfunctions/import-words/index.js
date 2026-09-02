@@ -55,6 +55,7 @@ exports.main = async (event) => {
         emoji: w.emoji || '',
         meaning: w.meaning,
         example: w.example || '',
+        exampleTarget: w.exampleTarget || '',
         root: w.root || '',
         mnemonic: w.mnemonic || '',
         tags: w.tags || [],

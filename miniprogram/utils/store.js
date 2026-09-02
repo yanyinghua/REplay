@@ -1,5 +1,6 @@
-// utils/store.js —— 本地存储封装（M1 单机可跑；后续可平滑切换云数据库）
+// utils/store.js —— 本地存储封装（M1 单机可跑；M3 已接入云存档 user-sync 自动互备）
 const srs = require('./srs.js')
+const sync = require('./sync.js')
 
 const SRS_KEY = 'srs_state'
 const USER_KEY = 'user_profile'
@@ -11,6 +12,7 @@ function saveSrsAll(obj) { wx.setStorageSync(SRS_KEY, obj) }
 function getRecord(wordId) { return getSrs()[wordId] || null }
 function saveRecord(wordId, record) {
   const all = getSrs(); all[wordId] = record; saveSrsAll(all)
+  sync.notify() // 记忆状态变更 → 防抖上云
 }
 
 // 对某个词评分并持久化
@@ -29,7 +31,10 @@ function getDueWordIds(now) {
 
 /* ---------- 用户档案 / 积分通关 ---------- */
 function getProfile() { return wx.getStorageSync(USER_KEY) || null }
-function saveProfile(p) { wx.setStorageSync(USER_KEY, p) }
+function saveProfile(p) {
+  wx.setStorageSync(USER_KEY, p)
+  sync.notify() // 等级/经验/打卡变更 → 上云
+}
 
 function expForLevel(level) { return (level - 1) * 200 } // 每级 200 经验
 function levelFromExp(exp) { return Math.floor(exp / 200) + 1 }
@@ -46,6 +51,19 @@ function addReward(exp, coin) {
 }
 
 // 打卡：返回 { ok, streak }
+/* ---------- 兴趣标签（首页热点推荐用；随 user_profile 云同步） ---------- */
+function getInterestTags() {
+  const p = getProfile()
+  return (p && Array.isArray(p.interest_tags)) ? p.interest_tags.slice() : []
+}
+function setInterestTags(ids) {
+  const list = Array.isArray(ids) ? ids.filter(Boolean) : []
+  const p = getProfile() || { exp: 0, level: 1, coin: 0, streak: 0, lastCheckin: 0, badges: [], createdAt: Date.now() }
+  p.interest_tags = list
+  saveProfile(p)
+  return list
+}
+
 function checkIn() {
   const p = getProfile()
   const today = new Date(); today.setHours(0, 0, 0, 0)
@@ -85,6 +103,7 @@ function saveLevelResult(bookId, levelIdx, stars, accuracy) {
   }
   all[bookId] = bk
   wx.setStorageSync(PROG_KEY, all)
+  sync.notify() // 关卡进度变更 → 上云
   return bk
 }
 
@@ -95,6 +114,7 @@ function markLearned(bookId, n) {
   all[bookId] = bk
   wx.setStorageSync(PROG_KEY, all)
   if (n > 0) addDailyLearned(n)   // 记录每日学习量（解锁扣减不影响今日）
+  sync.notify() // 已学数变更 → 上云
 }
 
 /* ---------- 每日学习统计 ---------- */
@@ -127,7 +147,15 @@ function getRecentDaily(n) {
 /* ---------- 操作手设置（学习按钮左右布局） ---------- */
 const HAND_KEY = 'hand_mode'
 function getHandMode() { return wx.getStorageSync(HAND_KEY) || 'right' }
-function setHandMode(mode) { wx.setStorageSync(HAND_KEY, mode === 'left' ? 'left' : 'right') }
+function setHandMode(mode) {
+  wx.setStorageSync(HAND_KEY, mode === 'left' ? 'left' : 'right')
+  sync.notify() // 设置变更 → 上云
+}
+
+/* ---------- 「继续学习」断点位置 ---------- */
+function saveLastPos(pos) { sync.saveLastPos(pos) }
+function loadLastPos() { return sync.loadLastPos() }
+function clearLastPos() { sync.clearLastPos() }
 
 /* ---------- 错词本 ---------- */
 // 返回所有“答错过”的词 id（lapses > 0）
@@ -158,5 +186,7 @@ module.exports = {
   getProgress, getBookProgress, saveLevelResult, markLearned,
   getWrongWordIds, gradeWrongMode, removeFromWrong,
   getHandMode, setHandMode,
+  getInterestTags, setInterestTags,
+  saveLastPos, loadLastPos, clearLastPos,
   getTodayLearned, getRecentDaily
 }

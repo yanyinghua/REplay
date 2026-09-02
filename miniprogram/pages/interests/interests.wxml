@@ -1,0 +1,23 @@
+<!-- pages/interests/interests.wxml —— 兴趣标签选择 -->
+<view class="ipage">
+  <view class="i-hero">
+    <view class="i-emoji">🎯</view>
+    <view class="i-title">{{guide ? '挑你感兴趣的，马上开刷' : '我的兴趣'}}</view>
+    <view class="i-sub">按兴趣为你推送当天的中英双语热点短句，随时可改</view>
+  </view>
+
+  <view class="i-grid">
+    <view class="chip {{sel[item.id] ? 'on' : ''}}"
+          wx:for="{{list}}" wx:key="id" bindtap="toggle" data-id="{{item.id}}">
+      <view class="chip-icon">{{item.icon}}</view>
+      <view class="chip-name">{{item.name}}</view>
+    </view>
+  </view>
+
+  <view class="i-hint">已选 {{chosen}} 项{{guide ? '，之后可在「我的」里修改' : ''}}</view>
+
+  <view class="i-actions">
+    <view class="i-btn primary" bindtap="save">保存</view>
+    <view wx:if="{{guide}}" class="i-skip" bindtap="skip">先随便逛逛</view>
+  </view>
+</view>

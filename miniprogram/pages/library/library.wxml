@@ -1,0 +1,63 @@
+<!-- pages/library/library.wxml —— 双语书库 -->
+<view class="container">
+  <!-- 顶部说明 + 自动更新开关 -->
+  <view class="head">
+    <view>
+      <view class="title">📖 双语书库</view>
+      <view class="subtitle" style="margin-top:8rpx">名著中英对照 · 词库学习之余读一读</view>
+    </view>
+  </view>
+
+  <view class="update-bar">
+    <view class="update-info">
+      <view class="upd-t">🔄 自动更新</view>
+      <view class="upd-s">{{autoUpdate ? '已开启：有新版本会自动更新下载' : '已关闭：可手动点右侧检查'}}</view>
+    </view>
+    <view class="upd-right">
+      <view class="upd-btn" bindtap="manualCheck">检查更新</view>
+      <switch checked="{{autoUpdate}}" bindchange="onAutoChange" color="#4f6ef7" style="transform:scale(0.8)"/>
+    </view>
+  </view>
+
+  <!-- 加载 / 空态 -->
+  <view wx:if="{{loading}}" class="center muted" style="padding:60rpx 0">加载中…</view>
+  <view wx:elif="{{books.length === 0}}" class="card center">
+    <view class="emoji-big">📚</view>
+    <view class="title" style="font-size:32rpx;margin-top:16rpx">书库暂空</view>
+    <view class="subtitle" style="margin-top:8rpx">在云开发控制台导入 novels 与 novel_chapters 集合后即可在线选书下载</view>
+  </view>
+
+  <!-- 书籍列表 -->
+  <view class="book" wx:for="{{books}}" wx:key="novelId" bindtap="open" data-id="{{item.novelId}}">
+    <view class="cover" style="background:linear-gradient(160deg, {{item.color}}, {{item.color}}88)">{{item.emoji}}</view>
+    <view class="main">
+      <view class="row">
+        <view class="b-title">{{item.title}}</view>
+        <view class="tag {{item.needUpdate ? 'tag-new' : ''}}" wx:if="{{item.needUpdate}}">有新版</view>
+      </view>
+      <view class="b-en" wx:if="{{item.enTitle}}">{{item.enTitle}}</view>
+      <view class="b-author">{{item.author}} · {{item.source === 'sample' ? '内置样书' : '云端名著'}}</view>
+      <view class="b-desc">{{item.desc}}</view>
+      <view class="b-info">{{item.chapterCount}} 章 · 约 {{item.wordCount}} 词</view>
+    </view>
+
+    <!-- 操作区（不冒泡，独立点按） -->
+    <view class="ops">
+      <block wx:if="{{item.needUpdate}}">
+        <view class="op op-dl" catchtap="download" data-id="{{item.novelId}}">更新</view>
+      </block>
+      <block wx:elif="{{item.downloaded}}">
+        <view class="op op-read" catchtap="open" data-id="{{item.novelId}}">阅读</view>
+        <view class="op op-del" catchtap="remove" data-id="{{item.novelId}}">删除</view>
+      </block>
+      <block wx:elif="{{item.readable}}">
+        <view class="op op-read" catchtap="open" data-id="{{item.novelId}}">阅读</view>
+      </block>
+      <block wx:else>
+        <view class="op op-dl" catchtap="download" data-id="{{item.novelId}}">下载</view>
+      </block>
+    </view>
+  </view>
+
+  <view class="tip-line">💡 更多双语名著：运行 scripts/build-novels.js 生成书目，导入云数据库 novels / novel_chapters 集合即可自动出现在这里</view>
+</view>

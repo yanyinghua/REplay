@@ -17,7 +17,7 @@ Page({
         const total = words.getWords(b.bookId).length
         const prog = store.getBookProgress(b.bookId)
         const learned = prog.learned || 0
-        return Object.assign({}, b, {
+        return Object.assign({ color: '#4f6ef7', emoji: '📚' }, b, {
           total, learned,
           percent: total ? Math.round(learned / total * 100) : 0
         })
@@ -37,5 +37,13 @@ Page({
 
   goStore() {
     wx.navigateTo({ url: '/pages/bookstore/bookstore' })
+  },
+
+  goSearch() {
+    wx.navigateTo({ url: '/pages/search/search' })
+  },
+
+  goRead() {
+    wx.navigateTo({ url: '/pages/library/library' })
   }
 })

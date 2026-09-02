@@ -1,0 +1,62 @@
+/* pages/interests/interests.wxss */
+page { background: #f5f6fa; }
+
+.ipage { padding: 36rpx 32rpx 60rpx; }
+
+.i-hero {
+  background: linear-gradient(150deg, #4f6ef7, #7b5cf0);
+  border-radius: 28rpx;
+  padding: 40rpx 36rpx;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.i-emoji { font-size: 76rpx; }
+.i-title { font-size: 36rpx; font-weight: 800; margin-top: 16rpx; }
+.i-sub { font-size: 24rpx; opacity: 0.85; margin-top: 10rpx; }
+
+.i-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22rpx;
+  margin-top: 32rpx;
+}
+.chip {
+  width: calc((100% - 44rpx) / 3);
+  box-sizing: border-box;
+  background: #fff;
+  border: 3rpx solid transparent;
+  border-radius: 24rpx;
+  padding: 28rpx 0 24rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 6rpx 18rpx rgba(79,110,247,0.06);
+  transition: all 0.15s;
+}
+.chip-icon { font-size: 52rpx; }
+.chip-name { font-size: 26rpx; font-weight: 700; color: #3a3d4c; margin-top: 12rpx; }
+.chip.on {
+  background: #eef1ff;
+  border-color: #4f6ef7;
+  box-shadow: 0 8rpx 22rpx rgba(79,110,247,0.18);
+}
+.chip.on .chip-name { color: #4f6ef7; }
+
+.i-hint { text-align: center; font-size: 24rpx; color: #9aa0b4; margin-top: 28rpx; }
+
+.i-actions { margin-top: 44rpx; display: flex; flex-direction: column; align-items: center; }
+.i-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #4f6ef7, #7b5cf0);
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 800;
+  text-align: center;
+  padding: 26rpx 0;
+  border-radius: 999rpx;
+  box-shadow: 0 10rpx 26rpx rgba(79,110,247,0.28);
+}
+.i-skip { margin-top: 26rpx; font-size: 26rpx; color: #9aa0b4; padding: 10rpx 30rpx; }

@@ -64,3 +64,14 @@
   -webkit-line-clamp: 4;
   overflow: hidden;
 }
+.sentence-zh {
+  font-size: 26rpx;
+  color: #8a90a8;
+  line-height: 1.5;
+  text-align: left;
+  margin-top: 10rpx;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
