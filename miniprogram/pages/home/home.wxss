@@ -60,6 +60,28 @@
 }
 .checkin.done .ci-btn { background: #b8dcc8; color: #fff; box-shadow: none; }
 
+/* 激励视频入口条 */
+.adrow {
+  background: #fff;
+  padding: 22rpx 32rpx;
+  display: flex; align-items: center;
+  border-radius: 0 0 28rpx 28rpx;
+  border-top: 2rpx solid #f0f1f6;
+}
+.adrow.done { background: #eaf7f0; border-top: 2rpx solid #d8ecdf; }
+.ad-ico { font-size: 44rpx; flex-shrink: 0; margin-right: 20rpx; }
+.ad-main { flex: 1; min-width: 0; }
+.ad-t { font-size: 28rpx; font-weight: 800; color: #2c2c3a; }
+.ad-s { font-size: 22rpx; color: #9aa0b4; margin-top: 4rpx; }
+.ad-go {
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #ffd25c, #ff9d5c);
+  color: #5b3a00; font-size: 24rpx; font-weight: 700;
+  padding: 14rpx 28rpx; border-radius: 999rpx;
+  box-shadow: 0 6rpx 16rpx rgba(255,157,92,0.35);
+}
+.adrow.done .ad-go { background: #b8dcc8; color: #fff; box-shadow: none; }
+
 /* ---------- 主内容 ---------- */
 .main { padding: 0 28rpx; margin-top: -4rpx; }
 

@@ -32,6 +32,16 @@
       </view>
       <view class="ci-btn">{{checked ? '已完成' : '去打卡'}}</view>
     </view>
+
+    <!-- 激励视频入口：远程 ad_config 开启后显示（默认隐藏，未开通流量主不受影响） -->
+    <view class="adrow {{adRowDone ? 'done' : ''}}" wx:if="{{adRow}}" bindtap="onAdCoin">
+      <view class="ad-ico">📺</view>
+      <view class="ad-main">
+        <view class="ad-t">{{adRowDone ? '今日视频奖励已领取' : '看视频 · 领金币'}}</view>
+        <view class="ad-s">{{adRowDone ? '明天再来，记得打卡哦' : '完整看完视频 +' + adReward + ' 金币（每日 1 次）'}}</view>
+      </view>
+      <view class="ad-go">{{adRowDone ? '已领取 ✓' : '看视频'}}</view>
+    </view>
   </view>
 
   <view class="main">

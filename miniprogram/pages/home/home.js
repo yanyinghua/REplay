@@ -4,6 +4,7 @@ const ret = require('../../utils/retention.js')
 const words = require('../../utils/wordbank.js')
 const dict = require('../../utils/dict.js')
 const trending = require('../../utils/trending.js')
+const ads = require('../../utils/ads.js')
 
 // 常见屈折变形 → 词根候选（仅作本地词库兜底，与阅读器一致）
 function guessRoot(spell) {
@@ -23,12 +24,20 @@ function guessRoot(spell) {
   return out
 }
 
+// 激励视频「每日一次」的领取记录 key 前缀
+const AD_COIN_PREFIX = 'ad_coin_'
+function dayStr() {
+  const d = new Date()
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
+}
+
 Page({
   data: {
     level: 1, expInLevel: 0, need: 200, expPercent: 0,
     coin: 0, streak: 0, checked: false,
     dueCount: 0, retention: 100, wrongCount: 0, todayLearned: 0,
     checkinText: '今日未打卡', checkinBonus: 12,
+    adRow: false, adRowDone: false, adReward: 0, // 激励视频入口（ad_config 远程开关控制）
     haveResume: false, resumeText: '', resumeSub: '',
     hotItems: [], hotShow: [], hotIdx: 0, cur: 0, hotLabel: '',
     hotAuto: true, hotAni: true, // 自动轮播标记 + 过渡是否开启；hotShow = 条目 + 首条副本(无缝循环)
@@ -39,6 +48,43 @@ Page({
     this.refresh()
     this.loadHot()
     this.maybeGuide()
+    this.refreshAd()
+    ads.loadConfig().then(() => this.refreshAd())
+  },
+
+  // ---------- 激励视频入口：看完整视频 → 领金币（每天 1 次） ----------
+  refreshAd() {
+    const on = ads.isOn('rewarded')
+    let done = false
+    try { done = !!wx.getStorageSync(AD_COIN_PREFIX + dayStr()) } catch (e) {}
+    this.setData({
+      adRow: on,
+      adRowDone: done,
+      adReward: ads.rewardCoin()
+    })
+  },
+  onAdCoin() {
+    if (this._adBusy) return
+    let done = false
+    try { done = !!wx.getStorageSync(AD_COIN_PREFIX + dayStr()) } catch (e) {}
+    if (done) { wx.showToast({ title: '今天已领过啦，明天再来', icon: 'none' }); return }
+    this._adBusy = true
+    ads.showRewarded().then(res => {
+      if (res && res.ok) {
+        // 只有完整看完（isEnded）才发奖
+        store.addReward(0, ads.rewardCoin())
+        try { wx.setStorageSync(AD_COIN_PREFIX + dayStr(), 1) } catch (e) {}
+        wx.showToast({ title: '🪙 金币 +' + ads.rewardCoin(), icon: 'none' })
+      } else if (res && res.code !== 'ad_off') {
+        wx.showToast({ title: (res && res.msg) || '暂未领取，再试试', icon: 'none' })
+      }
+    }).catch(() => {
+      wx.showToast({ title: '领取失败，请稍后再试', icon: 'none' })
+    }).then(() => {
+      this._adBusy = false
+      this.refresh()
+      this.refreshAd()
+    })
   },
 
   // 首次进入且未设置兴趣 → 引导选择（可跳过；之后「我的」页可改）
