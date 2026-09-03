@@ -38,6 +38,7 @@ Page({
     dueCount: 0, retention: 100, wrongCount: 0, todayLearned: 0,
     checkinText: '今日未打卡', checkinBonus: 12,
     adRow: false, adRowDone: false, adReward: 0, // 激励视频入口（ad_config 远程开关控制）
+    adFreeT: '看视频 · 领金币', adFreeS: '', adFreeBtn: '看视频', // 免广告直发态文案（vip.js 判定）
     haveResume: false, resumeText: '', resumeSub: '',
     hotItems: [], hotShow: [], hotIdx: 0, cur: 0, hotLabel: '',
     hotAuto: true, hotAni: true, // 自动轮播标记 + 过渡是否开启；hotShow = 条目 + 首条副本(无缝循环)
@@ -57,11 +58,30 @@ Page({
     const on = ads.isOn('rewarded')
     let done = false
     try { done = !!wx.getStorageSync(AD_COIN_PREFIX + dayStr()) } catch (e) {}
+    const t = this.adText(ads.rewardCoin())
     this.setData({
       adRow: on,
       adRowDone: done,
-      adReward: ads.rewardCoin()
+      adReward: ads.rewardCoin(),
+      adFreeT: t.t,
+      adFreeS: t.s,
+      adFreeBtn: t.btn
     })
+  },
+  // 金币入口三态文案：普通看视频 / VIP / 新人体验 / 免广告券（直发不调激励视频）
+  adText(coin) {
+    const v = ads.vipCanDirect()
+    if (!v.free) {
+      return { t: '看视频 · 领金币', s: '完整看完视频 +' + coin + ' 金币（每日 1 次）', btn: '看视频' }
+    }
+    if (v.reason === 'vip') {
+      return { t: 'VIP 免广告 · 领金币', s: '会员免看视频，直接领取 +' + coin + ' 金币（每日 1 次）', btn: '直接领' }
+    }
+    if (v.reason === 'trial') {
+      const d = Math.max(1, Math.ceil(v.trialLeft / 86400000))
+      return { t: '新人体验 · 免广告领金币', s: '体验期还剩 ' + d + ' 天，免看视频直接领 +' + coin + ' 金币', btn: '免看领' }
+    }
+    return { t: '免广告券 · 领金币', s: '消耗 1 张券直接领取 +' + coin + ' 金币（剩 ' + v.skipsLeft + ' 张）', btn: '用券领' }
   },
   onAdCoin() {
     if (this._adBusy) return
@@ -69,6 +89,17 @@ Page({
     try { done = !!wx.getStorageSync(AD_COIN_PREFIX + dayStr()) } catch (e) {}
     if (done) { wx.showToast({ title: '今天已领过啦，明天再来', icon: 'none' }); return }
     this._adBusy = true
+    const finish = () => { this._adBusy = false; this.refresh(); this.refreshAd() }
+    // VIP / 新人体验 / 免广告券：不调激励视频，直接发币（券档位扣 1 张）
+    const v = ads.vipCanDirect()
+    if (v.free) {
+      if (v.reason === 'skip') ads.vipSpend()
+      store.addReward(0, ads.rewardCoin())
+      try { wx.setStorageSync(AD_COIN_PREFIX + dayStr(), 1) } catch (e) {}
+      wx.showToast({ title: '🪙 金币 +' + ads.rewardCoin(), icon: 'none' })
+      finish()
+      return
+    }
     ads.showRewarded().then(res => {
       if (res && res.ok) {
         // 只有完整看完（isEnded）才发奖
@@ -80,11 +111,7 @@ Page({
       }
     }).catch(() => {
       wx.showToast({ title: '领取失败，请稍后再试', icon: 'none' })
-    }).then(() => {
-      this._adBusy = false
-      this.refresh()
-      this.refreshAd()
-    })
+    }).then(() => finish())
   },
 
   // 首次进入且未设置兴趣 → 引导选择（可跳过；之后「我的」页可改）

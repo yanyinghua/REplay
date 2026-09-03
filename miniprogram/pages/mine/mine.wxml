@@ -22,6 +22,20 @@
     <view class="stat"><view class="stat-num">{{streak}}</view><view class="muted">连续天</view></view>
   </view>
 
+  <!-- 会员 / 去广告状态卡：ad_config.vip 开启后显示，点击查看权益说明 -->
+  <view class="card vip {{vipCard.active ? 'on' : ''}}" wx:if="{{vipCard}}" bindtap="goVip">
+    <view class="vip-ico">{{vipCard.icon}}</view>
+    <view class="vip-main">
+      <view class="vip-top">
+        <text class="vip-tag">{{vipCard.tag}}</text>
+        <text class="vip-title">{{vipCard.title}}</text>
+      </view>
+      <view class="vip-desc">{{vipCard.desc}}</view>
+      <view class="vip-foot">{{vipCard.foot}}</view>
+    </view>
+    <view class="muted">›</view>
+  </view>
+
   <view class="card" style="margin-top:10rpx">
     <view class="title" style="font-size:32rpx;margin-bottom:8rpx">📊 词库已学进度</view>
     <view wx:if="{{bookStats.length === 0}}" class="subtitle">暂无已学记录，去词库学习吧～</view>

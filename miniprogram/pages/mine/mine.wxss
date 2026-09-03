@@ -65,3 +65,24 @@
   border-radius: 44rpx; color: #fff; font-size: 30rpx; font-weight: 700;
   background: linear-gradient(90deg, #4f6ef7, #34c77b);
 }
+
+/* 会员 / 去广告状态卡 */
+.vip { display: flex; align-items: center; margin-top: 10rpx; }
+.vip.on { background: linear-gradient(135deg, #fffaf0, #ffffff); border: 1rpx solid #f5dfae; }
+.vip-ico {
+  width: 84rpx; height: 84rpx; border-radius: 24rpx; flex: none;
+  background: linear-gradient(135deg, #ffe3c2, #ffb98a);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 44rpx;
+}
+.vip.on .vip-ico { background: linear-gradient(135deg, #ffd76a, #ffb347); box-shadow: 0 6rpx 16rpx rgba(255, 179, 71, 0.35); }
+.vip-main { flex: 1; margin: 0 20rpx; min-width: 0; }
+.vip-top { display: flex; align-items: center; }
+.vip-tag {
+  flex: none; font-size: 20rpx; font-weight: 700; color: #a86400;
+  background: #fff3d6; border-radius: 999rpx; padding: 2rpx 14rpx; margin-right: 12rpx;
+}
+.vip-title { font-size: 30rpx; font-weight: 800; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.vip-desc { font-size: 22rpx; color: #666; margin-top: 6rpx; }
+.vip-foot { font-size: 20rpx; color: #b08b3a; margin-top: 4rpx; }
+.vip.on .vip-foot { color: #c98a12; }

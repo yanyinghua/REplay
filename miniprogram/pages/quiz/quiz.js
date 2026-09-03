@@ -2,6 +2,7 @@
 const words = require('../../utils/wordbank.js')
 const store = require('../../utils/store.js')
 const typeface = require('../../utils/typeface.js')
+const ads = require('../../utils/ads.js')
 
 function shuffle(arr) {
   const a = arr.slice()
@@ -144,6 +145,9 @@ Page({
       gainExp, gainCoin,
       leveledUp: r.leveledUp, newLevel: r.profile.level
     })
+    // 自然翻篇点：插屏广告。内置 60s 全局冷却 + 每日每场景 1 次，
+    // 未开通/未配置/时机不合规时静默跳过，绝不打断学习流程。
+    ads.maybeInterstitial('quiz')
   },
 
   retry() {
