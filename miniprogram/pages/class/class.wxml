@@ -14,7 +14,7 @@
       <view class="btn-primary" bindtap="createClass">创建班级</view>
     </view>
 
-    <view wx:if="{{!myClasses.length && !showCreate}}" class="empty">还没有班级，建一个或输入 ID 加入</view>
+    <view wx:if="{{!myClasses.length && !showCreate}}" class="empty">还没有班级，点右上角建班（会生成班级码），或输入同学的班级码加入</view>
     <view wx:for="{{myClasses}}" wx:key="classId" class="row item" data-id="{{item.classId}}" bindtap="openDetail">
       <view class="info">
         <view class="name">{{item.name}}</view>
@@ -25,7 +25,7 @@
 
     <!-- 加班 -->
     <view class="join-row">
-      <input class="inp" placeholder="输入班级 ID 加入" value="{{joinId}}" bindinput="onJoinId" />
+      <input class="inp" placeholder="输入 6 位班级码加入" value="{{joinId}}" bindinput="onJoinId" />
       <view class="btn-small" bindtap="doJoin">加入</view>
     </view>
   </view>
@@ -35,6 +35,11 @@
     <view class="row" style="margin-bottom:12rpx">
       <view class="title">📊 {{detail.name}} · 班级榜</view>
       <button class="share-btn" open-type="share">分享班级</button>
+    </view>
+
+    <view class="row code-row">
+      <view class="subtitle">班级码：<text class="code">{{detail.inviteCode || detail.classId}}</text></view>
+      <view class="btn-small" data-id="{{detail.inviteCode || detail.classId}}" bindtap="copyCode">复制</view>
     </view>
 
     <view class="subtitle" style="margin-bottom:8rpx">成员（{{detail.members.length}}）</view>

@@ -7,10 +7,13 @@
       <view class="mode {{mode === 'dual' ? 'on' : ''}}" data-m="dual" bindtap="setMode">中英对照</view>
       <view wx:if="{{!enOnly}}" class="mode {{mode === 'zh' ? 'on' : ''}}" data-m="zh" bindtap="setMode">中文</view>
     </view>
-    <view class="fs">
-      <view class="fs-btn f-pop" bindtap="openFonts">Aa</view>
-      <view class="fs-btn" bindtap="fontDec">A−</view>
-      <view class="fs-btn" bindtap="fontInc">A＋</view>
+    <view class="frow">
+      <view class="fs">
+        <view class="fs-btn f-pop" bindtap="openFonts">Aa</view>
+        <view class="fs-btn" bindtap="fontDec">A−</view>
+        <view class="fs-btn" bindtap="fontInc">A＋</view>
+      </view>
+      <view class="go-al {{aloud ? 'on' : ''}}" wx:if="{{chapters.length}}" bindtap="toggleAloud">{{aloud ? '⏹' : '🎧'}}</view>
     </view>
   </view>
 
@@ -22,18 +25,63 @@
     </view>
   </scroll-view>
 
+  <!-- 整章朗读控制条（吸顶固定在工具栏下方） -->
+  <view class="aloud" wx:if="{{aloud}}">
+    <view class="al-row1">
+      <view class="al-nav" data-d="-1" bindtap="aloudStep">⏮</view>
+      <view class="al-play" bindtap="aloudToggle">{{aloud.playing ? '⏸ 暂停' : '▶️ 继续'}}</view>
+      <view class="al-nav" data-d="1" bindtap="aloudStep">⏭</view>
+      <slider class="al-slider" min="0" max="{{aloud.total - 1}}" value="{{aloud.cur}}" step="1"
+              activeColor="#7b5cf0" backgroundColor="#e8e4f7" block-color="#7b5cf0" block-size="16"
+              bindchanging="aloudDrag" bindchange="aloudSeek"/>
+      <view class="al-float {{alTr && alTr.open ? 'on' : ''}}" bindtap="toggleAlTr">译</view>
+      <view class="al-quit" bindtap="stopAloud">✕</view>
+    </view>
+    <view class="al-row2">
+      <view class="al-text">{{aloud.text}}</view>
+      <view class="al-rate" bindtap="aloudRate">{{aloud.rate}}×</view>
+      <view class="al-num">{{aloud.cur + 1}}/{{aloud.total}}</view>
+      <view class="al-follow {{follow ? 'on' : ''}}" bindtap="aloudFollow">{{follow ? '🎯' : '跟随'}}</view>
+      <view class="al-cont {{cont ? 'on' : ''}}" bindtap="aloudCont">🔁 连读</view>
+    </view>
+  </view>
+
+  <!-- 朗读译文悬浮框：跟句显示译文；按住可拖拽换位置，✕ 关闭 -->
+  <view class="al-tr" wx:if="{{alTr && alTr.show}}"
+        style="left:{{alTr.x}}px; top:{{alTr.y}}px; width:{{alTr.w}}px;"
+        catchtouchstart="alTrDown" catchtouchmove="alTrMove" catchtouchend="alTrEnd">
+    <view class="al-tr-en">{{alTr.en}}</view>
+    <view class="al-tr-zh">{{alTr.zh}}</view>
+    <view class="al-tr-foot">
+      <view class="al-tr-src">{{alTr.src}}</view>
+      <view class="al-tr-close" catchtap="closeAlTr">✕ 关闭</view>
+    </view>
+  </view>
+
   <!-- 正文 -->
-  <view class="reading" wx:if="{{!loading}}" style="font-family:{{fontFamily}}">
+  <view class="reading" wx:if="{{!loading}}" style="font-family:{{fontFamily}}" bindtap="bodyTap">
     <view class="chap-title">{{chapters[seq].title}}</view>
 
-    <view class="seg" wx:for="{{segs}}" wx:key="index">
-      <!-- 英文段：分词渲染，点击任意词查询释义 -->
+    <view class="seg" wx:for="{{segs}}" wx:for-index="gi" wx:key="index">
+      <!-- 英文句：词可点击查义，整句可长按选择（复制/翻译） -->
       <view class="para-en" wx:if="{{mode !== 'zh'}}" style="font-size:{{fontSize}}px">
-        <text wx:for="{{item.toks}}" wx:for-item="tk" wx:key="i"
-              class="tok {{mode === 'dual' ? 'dual-tok' : ''}}"
-              data-w="{{tk.w}}" bindtap="tapWord">{{tk.w}}</text>
+        <view wx:for="{{item.sls}}" wx:for-item="sl" wx:for-index="si" wx:key="si"
+              id="sg-{{sl.g}}"
+              class="sline {{sel.segi === gi && sel.si === si && !sel.zh ? 'hl' : ''}} {{aloud && aloud.cur === sl.g ? 'loud' : ''}}"
+              data-segi="{{gi}}" data-si="{{si}}" data-text="{{sl.text}}" data-g="{{sl.g}}"
+              bindtap="tapLineAloud"
+              bindlongpress="pickSentence">
+          <view wx:for="{{sl.toks}}" wx:for-item="tk" wx:key="i"
+                class="tok {{mode === 'dual' ? 'dual-tok' : ''}} {{sel.segi === gi && sel.si === si && !sel.zh && sel.loc && tk.i >= sel.loc.a && tk.i <= sel.loc.b ? 'tok-hl' : ''}} {{sel.segi === gi && sel.si === si && !sel.zh && sel.loc && !(tk.i >= sel.loc.a && tk.i <= sel.loc.b) ? 'tok-dim' : ''}}"
+                data-w="{{tk.w}}" data-segi="{{gi}}" data-si="{{si}}" data-i="{{tk.i}}"
+                catchtap="tapWord">{{tk.w}}</view>
+        </view>
       </view>
-      <view class="para-zh" wx:if="{{mode !== 'en' && item.zh}}" style="font-size:{{fontSize - 4 > 13 ? fontSize - 4 : 14}}px">{{item.zh}}</view>
+      <!-- 中文对照段：长按整段可复制 / 译成英文 -->
+      <view wx:if="{{mode !== 'en' && item.zh}}" class="para-zh {{sel.segi === gi && sel.zh ? 'hl' : ''}}"
+            style="font-size:{{fontSize - 4 > 13 ? fontSize - 4 : 14}}px"
+            data-segi="{{gi}}" data-zh="1" data-text="{{item.zh}}"
+            bindlongpress="pickSentence">{{item.zh}}</view>
     </view>
 
     <view class="end-note" wx:if="{{seq === chapters.length - 1}}">
@@ -110,6 +158,37 @@
           </view>
           <view class="f-check" wx:if="{{fontFamily === item.stack}}">✓</view>
         </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 句子操作条：长按句子后出现；英文句可进一步用 ✂️ 选词 只取句中局部 -->
+  <view class="actbar" wx:if="{{sel}}">
+    <view class="act-text-row">
+      <view class="act-text {{sel.locStep ? 'act-guide' : ''}}">
+        {{sel.locStep === 1 ? '① 轻点句中的第一个词' : sel.locStep === 2 ? '② 再轻点最后一个词，两点之间即选中' : sel.text}}
+      </view>
+      <view wx:if="{{!sel.zh}}" class="act-cut" bindtap="locSelect">{{sel.loc ? '⇄ 重选' : sel.locStep ? '✕ 取消' : '✂️ 选词'}}</view>
+    </view>
+    <view class="act-btns">
+      <view class="act-btn" bindtap="copySentence">📋 复制</view>
+      <view class="act-btn" bindtap="speakSel">🔊 朗读</view>
+      <view class="act-btn primary" bindtap="trSentence">{{trLoading ? '翻译中…' : '🌐 翻译'}}</view>
+      <view class="act-btn plain" bindtap="clearSel">✕</view>
+    </view>
+  </view>
+
+  <!-- 句子翻译结果浮层 -->
+  <view class="mask" wx:if="{{sPop}}" bindtap="closeSPop">
+    <view class="pop" catchtap="noop">
+      <view class="pop-head">
+        <view class="pop-title" style="flex:1">整句翻译 <text style="font-size:22rpx;color:#7b5cf0;margin-left:8rpx">{{sPop.label}}</text></view>
+        <view class="pop-close" bindtap="closeSPop">✕</view>
+      </view>
+      <view class="s-orig">{{sPop.text}}</view>
+      <view class="pop-meaning">{{sPop.zh}}</view>
+      <view class="pop-actions">
+        <view class="pbtn main" bindtap="copyTranslated">📋 复制译文</view>
       </view>
     </view>
   </view>

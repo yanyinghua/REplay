@@ -135,3 +135,11 @@
   color: #999;
   padding: 16rpx 0;
 }
+.code-row {
+  margin-bottom: 16rpx;
+}
+.code {
+  font-weight: 600;
+  color: #4f6ef7;
+  letter-spacing: 2rpx;
+}

@@ -26,17 +26,46 @@ function dateKey(d) {
   return off.toISOString().slice(0, 10)
 }
 
+const RETRY_MS = 30 * 60 * 1000 // 云端生成失败后 30 分钟内不重复请求；超过则自动再试（配合云函数重试）
+
 function loadCache() {
   try { return wx.getStorageSync(CACHE_KEY) || null } catch (e) { return null }
 }
 function saveCache(date, items) {
   try { wx.setStorageSync(CACHE_KEY, { date, items }) } catch (e) {}
 }
-function failDate() {
-  try { return wx.getStorageSync(FAIL_KEY) || '' } catch (e) { return '' }
+// 云端失败记录 {date, ts}
+function loadFail() {
+  try { return wx.getStorageSync(FAIL_KEY) || null } catch (e) { return null }
+}
+function failBlocked(today) {
+  const f = loadFail()
+  return !!(f && f.date === today && f.ts && Date.now() - f.ts < RETRY_MS)
 }
 function markFail(date) {
-  try { wx.setStorageSync(FAIL_KEY, date) } catch (e) {}
+  try { wx.setStorageSync(FAIL_KEY, { date, ts: Date.now() }) } catch (e) {}
+}
+
+// 以日期为种子的伪随机打乱：即使纯离线兜底，每天内容顺序也不同，减少「永远是那几条」的观感
+function seededRand(seed) {
+  let t = (seed >>> 0) || 1
+  return () => {
+    t += 0x6D2B79F5
+    let r = Math.imul(t ^ (t >>> 15), t | 1)
+    r ^= r + Math.imul(r ^ (r >>> 7), r | 61)
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296
+  }
+}
+function shuffleByDate(list, date) {
+  const a = list.slice()
+  let seed = 7
+  date.split('-').forEach(p => { seed = seed * 31 + (Number(p) || 0) })
+  const rand = seededRand(seed)
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1))
+    const t = a[i]; a[i] = a[j]; a[j] = t
+  }
+  return a
 }
 
 function catName(cat) {
@@ -77,15 +106,16 @@ function loadFeed() {
   const interests = store.getInterestTags()
   const today = dateKey()
   const cached = loadCache()
+  const offlineItems = () => shuffleByDate(decorate(offline), today) // 离线兜底：按当日日期换序
   // 1) 当日已成功拿到内容 → 直接用
   if (cached && cached.date === today && cached.items && cached.items.length) {
     return Promise.resolve({ date: today, source: cached.source || 'cache', items: filterByInterest(cached.items, interests) })
   }
-  // 2) 当日云端已失败过 → 不再反复请求，直接用离线
-  if (failDate() === today) {
-    return Promise.resolve({ date: today, source: 'offline', items: filterByInterest(decorate(offline), interests) })
+  // 2) 云端刚失败过（30 分钟内）→ 不再反复请求，先用离线兜底
+  if (failBlocked(today)) {
+    return Promise.resolve({ date: today, source: 'offline', items: filterByInterest(offlineItems(), interests) })
   }
-  // 3) 请求云端（不存在当日内容时云函数会懒生成并入库）
+  // 3) 请求云端（不存在当日内容时云函数会懒生成并入库；失败超 30 分钟会自动再试）
   return fetchCloud().then(res => {
     if (res && res.items && res.items.length) {
       const items = decorate(res.items)
@@ -93,18 +123,38 @@ function loadFeed() {
       return { date: today, source: 'cloud', items: filterByInterest(items, interests) }
     }
     markFail(today)
-    return { date: today, source: 'offline', items: filterByInterest(decorate(offline), interests) }
+    return { date: today, source: 'offline', items: filterByInterest(offlineItems(), interests) }
   }).catch(() => {
     markFail(today)
-    return { date: today, source: 'offline', items: filterByInterest(decorate(offline), interests) }
+    return { date: today, source: 'offline', items: filterByInterest(offlineItems(), interests) }
   })
 }
 
-function fetchCloud() {
+function fetchCloud(data) {
   if (!wx.cloud || !wx.cloud.callFunction) return Promise.resolve(null)
-  return wx.cloud.callFunction({ name: 'daily-trending' })
+  return wx.cloud.callFunction({ name: 'daily-trending', data: data || {} })
     .then(r => (r && r.result && r.result.ok) ? r.result : null)
     .catch(() => null)
+}
+
+// 手动强制刷新今日热点：忽略当天缓存，让云端重新抓取+翻译并覆盖
+// 成功 → 更新本地缓存并返回新列表；失败/无新内容 → 返回 null（旧缓存不动）
+function manualRefresh() {
+  const today = dateKey()
+  const interests = store.getInterestTags()
+  return fetchCloud({ force: true }).then(res => {
+    if (res && res.items && res.items.length) {
+      const items = decorate(res.items)
+      saveCache(today, items)
+      try { wx.removeStorageSync(FAIL_KEY) } catch (e) {}
+      return { date: today, source: res.cached ? 'cache' : 'cloud', refreshed: !!res.refreshed, items: filterByInterest(items, interests) }
+    }
+    markFail(today)
+    return null
+  }).catch(() => {
+    markFail(today)
+    return null
+  })
 }
 
 // 兴趣读写（profile 字段，云存档自动同步）
@@ -118,5 +168,5 @@ function interestText() {
 
 module.exports = {
   INTERESTS, NAME_MAP, dateKey,
-  loadFeed, getInterestTags, setInterestTags, interestText
+  loadFeed, manualRefresh, getInterestTags, setInterestTags, interestText
 }

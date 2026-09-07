@@ -6,37 +6,48 @@ const cloud = require('wx-server-sdk');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const _ = db.command;
-const { OPENID } = cloud.getWXContext();
 
 const { newRoom, defaultPlayer } = require('./pkRoom.js');
 const { buildPool } = require('./questionPool.js');
 const { applyAnswer, applyTimeout } = require('./pkLogic.js');
 
 exports.main = async (e) => {
+  const { OPENID } = cloud.getWXContext();
   const action = e.action;
-  if (action === 'match') return match(e);
+  if (action === 'match') return match(e, OPENID);
   if (action === 'start') return start(e);
-  if (action === 'answer') return answer(e);
+  if (action === 'answer') return answer(e, OPENID);
   if (action === 'timeout') return timeout(e);
-  if (action === 'heartbeat') return heartbeat(e);
-  if (action === 'quit') return quit(e);
+  if (action === 'heartbeat') return heartbeat(e, OPENID);
+  if (action === 'quit') return quit(e, OPENID);
   if (action === 'result') return result(e);
   return { error: 'unknown action: ' + action };
 };
 
 // 匹配：加入现有 waiting 房或新建；支持指定 roomId（邀请）
-async function match(e) {
+async function match(e, OPENID) {
   const { bookId = 'daily', level = 0, roomId } = e;
   const rooms = db.collection('pk_rooms');
 
   if (roomId) {
-    const r = await rooms.doc(roomId).get();
-    if (r.data && r.data.status === 'waiting' && r.data.players.length < 2) {
-      const players = r.data.players.concat([defaultPlayer(OPENID)]);
-      await rooms.doc(roomId).update({ data: { players, updatedAt: Date.now() } });
-      return { roomId, joined: true, players };
+    let r;
+    try {
+      r = await rooms.doc(roomId).get();
+    } catch (err) {
+      return { error: 'room unavailable' }; // 房间不存在/读取异常
     }
-    return { error: 'room unavailable' };
+    const room = r && r.data;
+    if (room && room.status === 'waiting') {
+      const players = room.players || [];
+      // 自己已在房间（重复点邀请卡片/刷新）→ 直接返回，不重复入座
+      if (players.some((p) => p._openid === OPENID)) return { roomId, joined: true, players };
+      if (players.length < 2) {
+        const next = players.concat([defaultPlayer(OPENID)]);
+        await rooms.doc(roomId).update({ data: { players: next, updatedAt: Date.now() } });
+        return { roomId, joined: true, players: next };
+      }
+    }
+    return { error: 'room unavailable' }; // 已开局/已满/已关闭
   }
 
   const list = await rooms.where({ status: 'waiting', bookId, level }).limit(10).get();
@@ -90,7 +101,7 @@ async function start(e) {
 }
 
 // 提交答案：事务中执行纯状态机
-async function answer(e) {
+async function answer(e, OPENID) {
   const { roomId } = e;
   const qIndex = Number(e.qIndex);
   const optionIndex = Number(e.optionIndex);
@@ -244,7 +255,7 @@ async function result(e) {
 }
 
 // 心跳：更新本人 lastSeen（存 heartbeats[openid]，避免覆盖 players 数组）
-async function heartbeat(e) {
+async function heartbeat(e, OPENID) {
   const { roomId } = e;
   if (roomId === undefined) return { error: 'missing roomId' };
   const rooms = db.collection('pk_rooms');
@@ -259,7 +270,7 @@ async function heartbeat(e) {
 }
 
 // 退出/断线：本人弃权，对手获胜并结算（幂等）
-async function quit(e) {
+async function quit(e, OPENID) {
   const { roomId } = e;
   if (roomId === undefined) return { error: 'missing roomId' };
   const rooms = db.collection('pk_rooms');

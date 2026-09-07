@@ -127,27 +127,52 @@ Page({
 
   // 今日双语热点流（云端 → 离线兜底），按兴趣过滤后滚动展示
   loadHot() {
-    trending.loadFeed().then(r => {
-      const list = (r && r.items) || []
-      const text = trending.interestText()
-      // 热点句本身已带中文译文，点击只查句中单词，故逐词拆开渲染
-      const ready = list.map(it => {
-        let toks = String(it.en || '').split(/\s+/).filter(Boolean).map((w, i) => ({ i, w }))
-        if (toks.length > 18) toks = toks.slice(0, 18).concat([{ i: -1, w: '…' }])
-        return Object.assign({}, it, { toks })
-      })
-      // 无缝循环：轨道末尾补一条首项副本，滚到副本后原位复位回第 0 条
-      const show = ready.length ? ready.concat([Object.assign({}, ready[0], { key: '__loop' })]) : []
-      this.stopHotTimer()
-      this.setData({
-        hotItems: ready,
-        hotShow: show,
-        hotLabel: text || '为你精选',
-        hotIdx: 0,
-        cur: 0,
-        hotAni: true
-      }, () => this.startHotTimer())
-    }).catch(() => {})
+    trending.loadFeed().then(r => this.applyHot(r)).catch(() => {})
+  },
+
+  // 把一组热点条目渲染进轮播（加载 / 手动刷新共用）
+  applyHot(r) {
+    const list = (r && r.items) || []
+    const text = trending.interestText()
+    // 热点句本身已带中文译文，点击只查句中单词，故逐词拆开渲染
+    const ready = list.map(it => {
+      let toks = String(it.en || '').split(/\s+/).filter(Boolean).map((w, i) => ({ i, w }))
+      if (toks.length > 18) toks = toks.slice(0, 18).concat([{ i: -1, w: '…' }])
+      return Object.assign({}, it, { toks })
+    })
+    // 无缝循环：轨道末尾补一条首项副本，滚到副本后原位复位回第 0 条
+    const show = ready.length ? ready.concat([Object.assign({}, ready[0], { key: '__loop' })]) : []
+    this.stopHotTimer()
+    this.setData({
+      hotItems: ready,
+      hotShow: show,
+      hotLabel: text || '为你精选',
+      hotIdx: 0,
+      cur: 0,
+      hotAni: true
+    }, () => this.startHotTimer())
+  },
+
+  // 手动刷新今日热点：忽略当天缓存强制重新抓取翻译（约几秒，需 loading）
+  onHotRefresh() {
+    if (this._hotBusy) return
+    this._hotBusy = true
+    this.setData({ hotRefreshing: true })
+    wx.showLoading({ title: '正在更新热点…', mask: true })
+    trending.manualRefresh().then(r => {
+      wx.hideLoading()
+      this.setData({ hotRefreshing: false })
+      if (r && r.items && r.items.length) {
+        this.applyHot(r)
+        wx.showToast({ title: r.refreshed ? '已更新今日热点' : '当前已是最新内容', icon: 'none' })
+      } else {
+        wx.showToast({ title: '暂时没刷到新内容，稍后再试', icon: 'none' })
+      }
+    }).catch(() => {
+      wx.hideLoading()
+      this.setData({ hotRefreshing: false })
+      wx.showToast({ title: '更新失败，请检查网络', icon: 'none' })
+    }).then(() => { this._hotBusy = false })
   },
 
   // ---------- 双语热点：自绘无缝轮播（原生 vertical swiper 真机自动播抖动，改用整轨 translateY） ----------

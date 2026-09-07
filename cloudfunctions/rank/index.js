@@ -5,12 +5,12 @@ const cloud = require('wx-server-sdk');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const _ = db.command;
-const { OPENID } = cloud.getWXContext();
 
 exports.main = async (e) => {
+  const { OPENID } = cloud.getWXContext();
   const action = e.action;
-  if (action === 'getRank') return getRank(e);
-  if (action === 'sync') return sync(e);
+  if (action === 'getRank') return getRank(e, OPENID);
+  if (action === 'sync') return sync(e, OPENID);
   return { error: 'unknown action: ' + action };
 };
 
@@ -32,7 +32,7 @@ function valueOf(user, scope, bookId, field) {
 }
 
 // 获取榜单 + 我的排名
-async function getRank(e) {
+async function getRank(e, OPENID) {
   const { scope = 'total', bookId = 'daily', friends = false, classId = '', limit = 50 } = e;
   const { field, unit } = fieldOf(scope, bookId);
   const users = db.collection('users');
@@ -111,7 +111,7 @@ async function getRank(e) {
 }
 
 // 最小化本地→云合并（取较大值，幂等）。M3.0 将统一为 syncProfile 并在关卡结算实时写云。
-async function sync(e) {
+async function sync(e, OPENID) {
   const { exp = 0, coin = 0, streak = 0, level = 1, learnedTotal = 0, bookProgress = {} } = e;
   const users = db.collection('users');
   const u = await users.where({ _openid: OPENID }).get();

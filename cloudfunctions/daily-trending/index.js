@@ -23,9 +23,15 @@ const FEEDS = {
   sport: 'sport',
   entertainment: 'entertainment_and_arts'
 }
-const MAX_PER_CAT = 3   // 每类最多取几条标题
-const MAX_TOTAL = 15    // 全天最多翻译条数（控制免费翻译额度）
-const TRANS_CONC = 3    // 翻译并发数
+const MAX_PER_CAT = 1   // 每类最多取 1 条标题：6 个分类共 6 条，翻译量最小
+const MAX_TOTAL = 6     // 全天最多翻译条数（控制免费翻译额度与生成时间）
+const TRANS_CONC = 3    // 翻译并发数（MyMemory 免费接口并发过高会限流/变慢，3 更稳）
+const FETCH_TIMEOUT = 4000 // 单条 RSS/翻译请求最多等 4 秒，失败即跳过，避免拖垮整体
+const DEADLINE_MS = 14000  // 整体生成硬截止 14 秒：到达后直接返回已拿到/已翻译的内容，绝不在函数里超 20 秒
+const RETRY_MS = 30 * 60 * 1000 // 当天生成失败后：超过 30 分钟允许再次自动重试，避免偶发失败导致全天无内容
+
+const FALLBACK = require('./fallback')
+const FALLBACK_ITEMS = FALLBACK.OFFLINE_ITEMS || []
 
 // ---------- 工具 ----------
 function dateKey(d) {
@@ -34,7 +40,29 @@ function dateKey(d) {
   return off.toISOString().slice(0, 10)
 }
 
-function getText(url) {
+// 按日期做伪随机打乱：兜底内容每天顺序不同，避免天天一样
+function seededRand(seed) {
+  let t = (seed >>> 0) || 1
+  return () => {
+    t += 0x6D2B79F5
+    let r = Math.imul(t ^ (t >>> 15), t | 1)
+    r ^= r + Math.imul(r ^ (r >>> 7), r | 61)
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296
+  }
+}
+function shuffleByDate(list, date) {
+  const a = list.slice()
+  let seed = 7
+  String(date).split('-').forEach(p => { seed = seed * 31 + (Number(p) || 0) })
+  const rand = seededRand(seed)
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1))
+    const t = a[i]; a[i] = a[j]; a[j] = t
+  }
+  return a
+}
+
+function fetchOnce(url) {
   return new Promise((resolve, reject) => {
     const req = https.get(url, {
       headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ReadEnglish/1.0' }
@@ -44,8 +72,37 @@ function getText(url) {
       res.on('data', c => { data += c })
       res.on('end', () => resolve(data))
     })
-    req.setTimeout(9000, () => { req.destroy(new Error('timeout')) })
+    req.setTimeout(FETCH_TIMEOUT, () => { req.destroy(new Error('timeout')) })
     req.on('error', reject)
+  })
+}
+
+// 单次抓取（不重试）：生成阶段重点是速度，失败即跳过，避免重试把总时间拉爆
+async function getText(url) {
+  return fetchOnce(url)
+}
+
+// 绝对超时包装：很多外网服务挂起时不会主动断开，仅靠 socket 空闲超时可能失灵
+// （数据流一直在传但永远不结束）。这里无论它怎样，到点一律 resolve('')，保证函数绝不挂死。
+function limit(p, ms) {
+  return new Promise((resolve) => {
+    let settled = false
+    const timer = setTimeout(() => {
+      if (settled) return
+      settled = true
+      resolve('')
+    }, ms)
+    Promise.resolve(p).then(v => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      resolve(v)
+    }, () => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      resolve('')
+    })
   })
 }
 
@@ -108,7 +165,7 @@ function translateMyMemory(en) {
         } catch (err) { resolve('') }
       })
     })
-    req.setTimeout(8000, () => { req.destroy(); resolve('') })
+    req.setTimeout(FETCH_TIMEOUT, () => { req.destroy(); resolve('') })
     req.on('error', () => resolve(''))
   })
 }
@@ -135,59 +192,118 @@ function mapLimit(list, n, fn) {
 
 // ---------- 抓取 + 翻译 ----------
 async function buildFeed() {
+  const start = Date.now()
+  const over = () => Date.now() - start > DEADLINE_MS
   const cats = Object.keys(FEEDS)
+
+  // 1) 尝试从 BBC RSS 抓标题
   const fetched = await mapLimit(cats, cats.length, async (cat) => {
+    if (over()) return { cat, titles: [] }
     try {
-      const xml = await getText(BBC_RSS.replace('%s', FEEDS[cat]))
-      return { cat, titles: parseTitles(xml, MAX_PER_CAT) }
+      // 单个 RSS 绝对 3.5 秒强制结束，6 个并发 → RSS 阶段最多约 4 秒
+      const xml = await limit(getText(BBC_RSS.replace('%s', FEEDS[cat])), 3500)
+      const titles = parseTitles(xml, MAX_PER_CAT)
+      if (!titles.length && xml) console.warn('[daily-trending] ' + cat + ' RSS 有响应但无可用标题')
+      return { cat, titles }
     } catch (e) {
+      console.warn('[daily-trending] ' + cat + ' RSS 抓取失败：', e && e.message)
       return { cat, titles: [] }
     }
   })
+
   // 打平成待翻译句列表，保持兴趣类别
   const lines = []
   fetched.forEach(f => {
     ;(f.titles || []).forEach(t => {
-      if (lines.length < MAX_TOTAL) lines.push({ cat: f.cat, en: t })
+      if (lines.length < MAX_TOTAL && !over()) lines.push({ cat: f.cat, en: t })
     })
   })
-  if (!lines.length) return []
-  const zhList = await mapLimit(lines, TRANS_CONC, l => translateMyMemory(l.en))
-  const items = []
-  lines.forEach((l, i) => {
-    items.push({ cat: l.cat, en: l.en, zh: zhList[i] || '' })
-  })
-  return items
+
+  // 2) 抓到有效标题 → 翻译成中文
+  if (lines.length) {
+    const zhList = await mapLimit(lines, TRANS_CONC, l => {
+      // 接近硬截止时不再发起新翻译，避免函数被平台掐掉
+      if (over()) return Promise.resolve('')
+      // 单条翻译绝对 3.5 秒强制结束；3 并发 × 2 批 → 翻译阶段最多约 8 秒
+      return limit(translateMyMemory(l.en), 3500)
+    })
+    const items = []
+    let allTranslated = true
+    lines.forEach((l, i) => {
+      const zh = zhList[i] || ''
+      if (!zh) allTranslated = false
+      // 翻译失败时至少保留英文原文，避免双语卡片中文彻底为空
+      items.push({ cat: l.cat, en: l.en, zh: zh || l.en })
+    })
+    if (allTranslated) return { source: 'BBC', items }
+    // 部分未翻译：能用，但记个日志
+    console.warn('[daily-trending] 部分标题翻译失败，返回含英文原文的内容')
+    return { source: 'BBC', items }
+  }
+
+  // 3) 外部 RSS/翻译全失败 → 用内置兜底双语短句，保证首页始终有内容
+  console.warn('[daily-trending] 外部源全部失败，使用内置兜底内容 date=' + dateKey())
+  const fb = shuffleByDate(FALLBACK_ITEMS, dateKey()).slice(0, MAX_TOTAL)
+  return { source: 'fallback', items: fb }
 }
 
 // ---------- 入口 ----------
-exports.main = async () => {
+// 参数：event.force = true 时忽略当天缓存、强制重新抓取+翻译覆盖（手动刷新用）
+// 注意：force 若本次生成失败，会保留旧缓存不清空，避免刷新把好的内容刷没
+exports.main = async (event = {}) => {
+  const force = !!(event && event.force)
   const date = dateKey()
-  // 1) 当日已有 → 直接返回
-  try {
-    const r = await db.collection(COLL).doc(date).get()
-    const d = r && r.data
-    if (d && d.items && d.items.length) {
-      return { ok: true, date, items: d.items, cached: true }
-    }
-    if (d && d.empty) {
-      // 当日已尝试但失败过 → 不再重复抓取，让客户端走离线兜底
-      return { ok: true, date, items: [], empty: true }
-    }
-  } catch (e) { /* 集合不存在等，继续生成 */ }
+  const now0 = Date.now()
+
+  // 1) 非 force：当日已有 → 直接返回（懒生成缓存命中）
+  let keep = null
+  if (!force) {
+    try {
+      const r = await db.collection(COLL).doc(date).get()
+      const d = r && r.data
+      if (d && d.items && d.items.length) {
+        return { ok: true, date, items: d.items, cached: true }
+      }
+      if (d && d.empty) {
+        // 当日失败过：30 分钟内不重复抓取（避免反复烧翻译额度）；超时后允许自动重试，防止整天没有当日内容
+        if (Date.now() - (d.lastAttemptAt || 0) < RETRY_MS) {
+          return { ok: true, date, items: [], empty: true }
+        }
+      }
+    } catch (e) { /* 集合不存在等，继续生成 */ }
+  } else {
+    // force：先读出旧缓存，仅用于生成失败时兜底保留
+    try { const r = await db.collection(COLL).doc(date).get(); keep = (r && r.data) || null } catch (e) { keep = null }
+  }
 
   // 2) 生成当日内容
-  let items = []
-  try { items = await buildFeed() } catch (e) { items = [] }
+  let feed = { source: '', items: [] }
+  try { feed = await buildFeed() } catch (e) { console.error('[daily-trending] buildFeed error:', e && e.message) ; feed = { source: '', items: [] } }
+  const items = feed.items || []
+  const source = feed.source || (items.length ? 'BBC' : '')
+  if (!items.length) console.warn('[daily-trending] 生成内容为空 date=' + date + ' force=' + force + ' 耗时=' + (Date.now() - now0) + 'ms')
 
   // 3) 写入（失败不影响返回，客户端另有离线兜底）
+  const now = Date.now()
   try {
-    await db.collection(COLL).doc(date).set({
-      data: items.length
-        ? { date, items, source: 'BBC', updatedAt: Date.now() }
-        : { date, items: [], empty: true, updatedAt: Date.now() }
-    })
+    if (items.length) {
+      await db.collection(COLL).doc(date).set({
+        data: { date, items, source, updatedAt: now, lastAttemptAt: now }
+      })
+    } else if (!force) {
+      await db.collection(COLL).doc(date).set({
+        data: { date, items: [], empty: true, updatedAt: now, lastAttemptAt: now }
+      })
+    }
+    // force 且生成空：不覆盖，保留 keep（旧内容仍可继续用）
   } catch (e) {}
 
-  return { ok: true, date, items, source: 'BBC' }
+  if (force) {
+    // 手动刷新失败但旧缓存还在 → 返回旧内容并注明，前端提示"暂未刷到新内容"
+    if (!items.length && keep && keep.items && keep.items.length) {
+      return { ok: true, date, items: keep.items, cached: true, refreshed: false }
+    }
+    return { ok: items.length > 0, date, items, source, refreshed: true }
+  }
+  return { ok: true, date, items, source }
 }

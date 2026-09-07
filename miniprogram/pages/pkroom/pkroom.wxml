@@ -1,11 +1,23 @@
 <view class="container">
 
   <!-- 匹配 / 等待 -->
-  <view wx:if="{{status==='matching' || status==='waiting'}}" class="center" style="margin-top:220rpx">
+  <view wx:if="{{status==='matching' || status==='waiting'}}" class="center" style="margin-top:80rpx">
     <view style="font-size:130rpx">⚔️</view>
     <view class="title">{{status==='matching' ? '匹配中…' : '等待对手加入…'}}</view>
-    <view class="subtitle" style="margin-top:12rpx">房间号 {{roomId}}</view>
-    <view class="subtitle" style="margin-top:6rpx">把房间号发给好友即可邀请对战</view>
+
+    <!-- 对战邀请：房间号 4 位分组显示、点击即复制；一键转发微信卡片让好友直接进房 -->
+    <block wx:if="{{!solo}}">
+      <view class="room-card" hover-class="room-hover" bindtap="copyRoomId">
+        <view class="room-label">房间号 · 点击复制</view>
+        <view class="room-id">{{roomIdPretty || roomId}}</view>
+      </view>
+      <button class="btn-primary share-btn" open-type="share" hover-class="none">🤝 邀请微信好友对战</button>
+      <button class="btn-ghost share-btn" bindtap="copyRoomId" hover-class="none">📋 复制房间号</button>
+      <view class="subtitle" style="margin-top:10rpx">好友点开你发的邀请卡片，即可直接加入本房间</view>
+    </block>
+
+    <!-- 单人练习：无需邀请 -->
+    <view wx:if="{{solo}}" class="subtitle" style="margin-top:24rpx">正在准备题目，请稍候…</view>
   </view>
 
   <!-- 对战中 -->

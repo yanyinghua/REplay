@@ -85,7 +85,10 @@
           <text class="hh-t">今日双语热点</text>
           <text class="hh-label">{{hotLabel}}</text>
         </view>
-        <view class="hh-set">调整 ›</view>
+        <view class="hh-right">
+          <view class="hh-refresh {{hotRefreshing ? 'hh-spin' : ''}}" catchtap="onHotRefresh">🔄</view>
+          <view class="hh-set">调整 ›</view>
+        </view>
       </view>
 
       <view wx:if="{{hotItems.length === 0}}" class="hot-tip">正在加载今日热点…</view>

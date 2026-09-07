@@ -8,49 +8,62 @@
   margin-left: 16rpx;
 }
 
-/* 底部操作区：两列，各容纳大按钮 + 竖向操作组 */
+/* 操作列：竖排 上一个/发音/翻面/下一个，整列贴当前操作手一侧（拇指纵向扫动） */
 .study-actions {
   display: flex;
-  margin-top: 32rpx;
-  align-items: flex-start;
-}
-.study-side {
-  flex: 1;
-  display: flex;
   flex-direction: column;
+  gap: 16rpx;
+  width: 250rpx;
+  margin-top: 36rpx;
+  /* 底部是独立的「不认识」红钮，竖排键滚动到最底时也不会与其重叠 */
+  margin-bottom: 280rpx;
+}
+.study-actions.rail-left { align-self: flex-start; }
+.study-actions.rail-right { margin-left: auto; }
+
+.vkey {
+  display: flex;
   align-items: center;
-  min-width: 0;
-}
-.study-side + .study-side { margin-left: 24rpx; }
-
-.study-side .btn-ghost, .study-side .btn-primary {
-  width: 100%;
-  margin: 0;
-  box-sizing: border-box;
-}
-.notknown-btn {
-  border: 2rpx solid #ff6b6b;
-  color: #ff6b6b;
-  background: #fff0f0;
-}
-.notknown-btn::after { border: none; }
-
-/* 竖向操作组：翻面 / 发音 / 上一个 */
-.mini-actions {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  margin-top: 16rpx;
-}
-.mini-btn {
-  background: #f0f2f8;
-  color: #5a607a;
-  border: 1rpx solid #e4e8f2;
+  gap: 16rpx;
+  padding: 18rpx 28rpx;
   border-radius: 999rpx;
-  font-size: 26rpx;
-  padding: 14rpx 0;
-  margin-top: 12rpx;
-  text-align: center;
+  background: #fff;
+  border: 1rpx solid #eef0f8;
+  box-sizing: border-box;
+  box-shadow: 0 6rpx 18rpx rgba(79, 110, 247, 0.10);
+  transition: transform 0.1s;
 }
-.mini-btn:active { background: #e2e6f2; }
-.mini-btn.disabled { opacity: 0.35; }
+.vkey:active { transform: scale(0.94); }
+.vkey-icon { font-size: 38rpx; line-height: 1; }
+.vkey-label { font-size: 28rpx; font-weight: 600; color: #4a4f6a; }
+
+/* 主操作「下一个」：列底，渐变高亮，最靠近拇指落点 */
+.vkey-primary {
+  background: linear-gradient(135deg, #4f6ef7, #7b5cf0);
+  border: none;
+  box-shadow: 0 10rpx 24rpx rgba(94, 104, 247, 0.35);
+}
+.vkey-primary .vkey-label { color: #fff; }
+
+/* 第一张卡时「上一个」弱化 */
+.vkey-muted { opacity: 0.4; }
+
+/* 「不认识」：屏幕底部居中的独立红钮 —— 与竖排前进键完全分离、需刻意点击，避免滑动手误触；
+   点击 = 当前词立即进复习（间隔归零 + 记错词本）并跳到下一张 */
+.forget-fab {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(56rpx + env(safe-area-inset-bottom));
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  padding: 20rpx 52rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #ff7d7d, #ff5f6d);
+  box-shadow: 0 12rpx 28rpx rgba(255, 95, 109, 0.35);
+}
+.forget-fab:active { opacity: 0.8; }
+.ff-icon { font-size: 36rpx; line-height: 1; }
+.ff-label { font-size: 30rpx; font-weight: 700; color: #fff; }

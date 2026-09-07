@@ -1,9 +1,6 @@
-// data/trending.js —— 离线保底双语短句（无网 / 云内容流不可用时兜底）
-// 说明：云端「今日热点」成功时会替换本内容；这里的句子是常青型科普/生活话题，
-//       不虚构新闻事实，保证任何离线状态下首页热点卡都有内容可滚动。
-//       展示端会按当天日期做伪随机换序，避免每天看起来都是同样几条。
-// 结构：OFFLINE_ITEMS = [{ cat, en, zh }]
-// cat ∈ tech / business / science / health / sport / entertainment
+// fallback.js —— 当外部 RSS/翻译全部不可用时，作为云端每日热点的兜底双语短句池
+// 与 miniprogram/data/trending.js 内容保持一致，保证无网/外网不通时首页仍有内容可滚动。
+// 句子为常青型科普/生活话题，不虚构新闻事实。
 const OFFLINE_ITEMS = [
   { cat: 'tech', en: 'Electric cars are getting cheaper, and more charging stations are being built every year.', zh: '电动汽车越来越便宜，各地每年都在新建更多充电站。' },
   { cat: 'tech', en: 'Artificial intelligence now helps doctors read X-rays and find problems faster.', zh: '人工智能如今正帮医生更快地读取X光片、发现问题。' },

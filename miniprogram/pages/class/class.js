@@ -65,9 +65,26 @@ Page({
         wx.showToast({ title: res.result.error, icon: 'none' })
         return
       }
-      wx.showToast({ title: '建班成功', icon: 'none' })
+      const cls = (res.result && res.result.class) || {}
       this.setData({ showCreate: false, newName: '', newGoal: '' })
       this.loadMy()
+      const code = cls.inviteCode || cls._id || ''
+      if (code) {
+        wx.showModal({
+          title: '建班成功',
+          content:
+            '班级码：' +
+            code +
+            '\n\n把班级码发给同学，TA 在班级页输入即可加入；也可以点班级详情里的「分享班级」卡片直接进班。',
+          confirmText: '复制班码',
+          cancelText: '关闭',
+          success: (r) => {
+            if (r.confirm) wx.setClipboardData({ data: code })
+          },
+        })
+      } else {
+        wx.showToast({ title: '建班成功', icon: 'none' })
+      }
     } catch (err) {
       console.error(err)
       wx.showToast({ title: '建班失败', icon: 'none' })
@@ -117,7 +134,13 @@ Page({
       const members = (m.result && m.result.members) || []
       const board = (b.result && b.result.board) || []
       this.setData({
-        detail: { classId, name: (m.result && m.result.name) || '', members, board },
+        detail: {
+          classId,
+          inviteCode: (m.result && m.result.inviteCode) || '',
+          name: (m.result && m.result.name) || '',
+          members,
+          board,
+        },
       })
     } catch (err) {
       console.error(err)
@@ -135,6 +158,12 @@ Page({
     } catch (err) {
       console.error(err)
     }
+  },
+
+  copyCode(e) {
+    const id = e.currentTarget.dataset.id
+    if (!id) return
+    wx.setClipboardData({ data: id })
   },
 
   onShareAppMessage() {

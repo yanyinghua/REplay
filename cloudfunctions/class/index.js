@@ -5,27 +5,29 @@ const cloud = require('wx-server-sdk');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const _ = db.command;
-const { OPENID } = cloud.getWXContext();
 
 exports.main = async (e) => {
+  const { OPENID } = cloud.getWXContext();
   const action = e.action;
-  if (action === 'create') return create(e);
-  if (action === 'join') return join(e);
-  if (action === 'quit') return quit(e);
-  if (action === 'my') return my();
-  if (action === 'members') return members(e);
-  if (action === 'board') return board(e);
+  if (action === 'create') return create(e, OPENID);
+  if (action === 'join') return join(e, OPENID);
+  if (action === 'quit') return quit(e, OPENID);
+  if (action === 'my') return my(OPENID);
+  if (action === 'members') return members(e, OPENID);
+  if (action === 'board') return board(e, OPENID);
   return { error: 'unknown action: ' + action };
 };
 
-// 建班：owner=本人，members=[本人]
-async function create(e) {
+// 建班：owner=本人，members=[本人]，inviteCode=6位短班码（去掉易混淆字符）
+async function create(e, OPENID) {
   const name = (e.name || '').trim();
   if (!name) return { error: '班级名不能为空' };
+  const inviteCode = await uniqueCode();
   const doc = {
     name,
     owner: OPENID,
     members: [OPENID],
+    inviteCode,
     goalText: (e.goalText || '').trim(),
     createAt: Date.now(),
   };
@@ -33,21 +35,50 @@ async function create(e) {
   return { ok: true, classId: res._id, class: Object.assign({ _id: res._id }, doc) };
 }
 
-// 加入：members push 去重
-async function join(e) {
-  const classId = e.classId;
-  if (!classId) return { error: '缺少 classId' };
-  const classes = db.collection('classes');
-  const c = await classes.doc(classId).get();
-  const cls = c.data;
-  if (!cls) return { error: '班级不存在' };
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 不含 0O1I
+function genCode(n) {
+  let s = '';
+  for (let i = 0; i < n; i++) {
+    s += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)];
+  }
+  return s;
+}
+// 生成不重复的 6 位班码
+async function uniqueCode() {
+  for (let i = 0; i < 10; i++) {
+    const code = genCode(6);
+    const r = await db.collection('classes').where({ inviteCode: code }).count();
+    if (r.total === 0) return code;
+  }
+  return genCode(6);
+}
+
+// 按 班码 或 _id 找班级
+async function findClass(code) {
+  if (!code) return null;
+  const kw = String(code).trim().toUpperCase();
+  const byCode = await db.collection('classes').where({ inviteCode: kw }).limit(1).get();
+  if (byCode.data && byCode.data.length) return byCode.data[0];
+  try {
+    const byId = await db.collection('classes').doc(kw).get();
+    if (byId.data) return byId.data;
+  } catch (e) {}
+  return null;
+}
+
+// 加入：支持 6 位班码或 _id；members push 去重
+async function join(e, OPENID) {
+  const code = e.classId;
+  if (!code) return { error: '缺少 classId' };
+  const cls = await findClass(code);
+  if (!cls) return { error: '班级不存在或班码错误' };
   if ((cls.members || []).includes(OPENID)) return { ok: true, already: true };
-  await classes.doc(classId).update({ data: { members: _.push(OPENID) } });
-  return { ok: true, joined: true };
+  await db.collection('classes').doc(cls._id).update({ data: { members: _.push(OPENID) } });
+  return { ok: true, joined: true, classId: cls._id, inviteCode: cls.inviteCode };
 }
 
 // 退出：非 owner 直接 pull；owner 退出则转让首位成员，无成员则解散
-async function quit(e) {
+async function quit(e, OPENID) {
   const classId = e.classId;
   if (!classId) return { error: '缺少 classId' };
   const classes = db.collection('classes');
@@ -69,16 +100,17 @@ async function quit(e) {
 }
 
 // 我的班级列表
-async function my() {
+async function my(OPENID) {
   const res = await db
     .collection('classes')
     .where({ members: OPENID })
-    .field({ _id: true, name: true, owner: true, goalText: true, members: true })
+    .field({ _id: true, name: true, owner: true, goalText: true, inviteCode: true, members: true })
     .limit(50)
     .get();
   return {
     list: (res.data || []).map((c) => ({
       classId: c._id,
+      inviteCode: c.inviteCode || '',
       name: c.name,
       owner: c.owner,
       goalText: c.goalText || '',
@@ -89,7 +121,7 @@ async function my() {
 }
 
 // 班级成员
-async function members(e) {
+async function members(e, OPENID) {
   const classId = e.classId;
   if (!classId) return { error: '缺少 classId' };
   const c = await db.collection('classes').doc(classId).get();
@@ -103,6 +135,7 @@ async function members(e) {
     .get();
   return {
     classId,
+    inviteCode: cls.inviteCode || '',
     name: cls.name,
     owner: cls.owner,
     members: (res.data || []).map((u) => ({
@@ -116,7 +149,7 @@ async function members(e) {
 }
 
 // 班级榜：成员按 exp 降序
-async function board(e) {
+async function board(e, OPENID) {
   const classId = e.classId;
   if (!classId) return { error: '缺少 classId' };
   const c = await db.collection('classes').doc(classId).get();

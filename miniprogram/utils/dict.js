@@ -1,7 +1,8 @@
 // utils/dict.js —— 在线查词/翻译（走 dict 云函数，不受域名白名单限制）
 // 带本地缓存：30 天内重复查过的词直接返回，省流量也保证离线可见上次结果
 
-const CACHE_KEY = 'dict_cache_v1'
+// v2：弃用 v1（其中可能缓存了 MyMemory 记忆库给出的语义相反的错误译文，如 I'm a reader→我不是读者）
+const CACHE_KEY = 'dict_cache_v2'
 const CACHE_TTL = 30 * 24 * 3600 * 1000
 const CACHE_MAX = 150
 

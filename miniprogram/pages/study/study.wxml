@@ -30,24 +30,22 @@
     </view>
   </view>
 
-  <!-- 底部操作区：左手模式操作按钮在「不认识」下，右手模式在「认识」下 -->
-  <view class="study-actions">
-    <view class="study-side">
-      <button class="btn-ghost notknown-btn" bindtap="notKnown">😵 不认识</button>
-      <view class="mini-actions" wx:if="{{hand === 'left'}}">
-        <view class="mini-btn {{index > 0 ? '' : 'disabled'}}" bindtap="flip">🔄 翻面</view>
-        <view class="mini-btn" bindtap="speak">🔊 发音</view>
-        <view class="mini-btn {{index > 0 ? '' : 'disabled'}}" bindtap="prev">← 上一个</view>
-      </view>
+  <!-- 操作列：竖排 上一个 / 发音 / 翻面 / 下一个，整列贴当前操作手一侧（拇指纵向扫动）；
+       「下一个」不预判记忆，交由闯关测验评分 -->
+  <view class="study-actions {{hand === 'left' ? 'rail-left' : 'rail-right'}}">
+    <view wx:for="{{actions}}" wx:key="type" wx:for-index="i"
+          class="vkey {{item.primary ? 'vkey-primary' : ''}} {{item.type === 'prev' && index === 0 ? 'vkey-muted' : ''}}"
+          bindtap="actionTap" data-act="{{item.type}}">
+      <text class="vkey-icon">{{item.icon}}</text>
+      <text class="vkey-label">{{item.label}}</text>
     </view>
-    <view class="study-side">
-      <button class="btn-primary known-btn" bindtap="known">😎 认识</button>
-      <view class="mini-actions" wx:if="{{hand === 'right'}}">
-        <view class="mini-btn {{index > 0 ? '' : 'disabled'}}" bindtap="flip">🔄 翻面</view>
-        <view class="mini-btn" bindtap="speak">🔊 发音</view>
-        <view class="mini-btn {{index > 0 ? '' : 'disabled'}}" bindtap="prev">← 上一个</view>
-      </view>
-    </view>
+  </view>
+
+  <!-- 「不认识」：屏幕底部居中的独立红钮，与前进键完全分离避免误触；
+       点击 = 当前词立即进复习(间隔归零+错词本)并跳到下一张 -->
+  <view class="forget-fab" bindtap="actionTap" data-act="forget">
+    <text class="ff-icon">😵</text>
+    <text class="ff-label">不认识</text>
   </view>
 </view>
 

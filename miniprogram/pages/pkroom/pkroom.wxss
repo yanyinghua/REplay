@@ -28,3 +28,30 @@
 .result-card { background: #fff; width: 80%; border-radius: 24rpx; padding: 48rpx; text-align: center; }
 .reward { margin-top: 16rpx; font-size: 30rpx; font-weight: 700; color: #4f6ef7; }
 .reward.badge { color: #ff9f1c; }
+
+/* 等待/匹配：房间号卡片 + 邀请按钮 */
+.room-card {
+  width: 72%;
+  margin: 36rpx auto 6rpx;
+  background: #fff;
+  border: 2rpx solid #eef0f8;
+  border-radius: 24rpx;
+  padding: 22rpx 16rpx 26rpx;
+  box-shadow: 0 8rpx 24rpx rgba(79, 110, 247, 0.10);
+}
+.room-hover { opacity: 0.75; }
+.room-label { font-size: 22rpx; color: #9aa0b4; }
+.room-id {
+  margin-top: 8rpx;
+  font-size: 44rpx;
+  font-weight: 800;
+  color: #4f6ef7;
+  letter-spacing: 2rpx;
+  word-break: break-all;
+}
+.share-btn {
+  display: block;
+  width: 72%;
+  margin: 20rpx auto 0;
+  font-size: 30rpx;
+}

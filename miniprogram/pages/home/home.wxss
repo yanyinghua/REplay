@@ -160,7 +160,23 @@
   white-space: nowrap;
   max-width: 220rpx;
 }
-.hh-set { font-size: 24rpx; color: #9aa0b4; flex-shrink: 0; }
+.hh-right { display: flex; align-items: center; gap: 6rpx; flex-shrink: 0; }
+.hh-set { font-size: 24rpx; color: #9aa0b4; }
+.hh-refresh {
+  width: 52rpx; height: 52rpx;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28rpx;
+  color: #7b5cf0;
+  background: #f0ecff;
+  border-radius: 50%;
+  transition: opacity 0.2s;
+}
+.hh-refresh:active { opacity: 0.6; }
+.hh-spin { animation: hhRotate 1s linear infinite; }
+@keyframes hhRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 .hot-swiper { height: 220rpx; overflow: hidden; }
 .hot-track {
   transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);

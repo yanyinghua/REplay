@@ -48,16 +48,19 @@
 .seg { margin-bottom: 30rpx; }
 .para-en {
   color: #2c2c3a; line-height: 2.05; letter-spacing: 0.5rpx;
-  /* 每词一个 text 之间没有空格字符，无法靠空白换行；
-     用 flex-wrap 让断行发生在词边界 */
-  display: flex; flex-wrap: wrap;
 }
-.tok {
-  color: inherit; margin-right: 0.32em;
-  /* 兜底：万一有超长单词/链接，允许在词内断开避免溢出屏幕 */
-  word-break: break-all; min-width: 0;
-}
+/* 英文按句内联渲染：词间用真实空格提供断行点（配合 .ws） */
+.sline { display: inline; }
+/* 每个词独立 inline-block，词间距用 margin 实现，真机不丢空格且保留断行点 */
+.sline .tok { display: inline-block; margin-right: 0.32em; word-break: break-all; }
+.sline.hl, .para-zh.hl { background: #fff0b8; border-radius: 4rpx; }
 .tok.dual-tok { background: rgba(79,110,247,0.06); border-radius: 6rpx; padding: 0 2rpx; }
+/* 句内局部选词：选中的词加深、同句未选的词淡化，范围一目了然 */
+.sline .tok.tok-hl {
+  background: #ffd76a; border-radius: 6rpx; padding: 0 2rpx;
+  color: #7a5b00; font-weight: 600;
+}
+.sline .tok.tok-dim { opacity: 0.38; }
 .para-zh {
   color: #8a8f9e; margin-top: 10rpx; line-height: 1.9;
   border-left: 6rpx solid #e6e9f5; padding-left: 20rpx;
@@ -155,3 +158,157 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .f-check { color: #4f6ef7; font-weight: 900; font-size: 32rpx; margin-left: 16rpx; }
+
+/* 句子操作条：长按句子后固定在翻章栏上方 */
+.actbar {
+  position: fixed; left: 0; right: 0; z-index: 15;
+  bottom: calc(108rpx + env(safe-area-inset-bottom));
+  background: rgba(36, 38, 56, 0.94);
+  border-radius: 20rpx;
+  margin: 0 20rpx;
+  padding: 18rpx 20rpx;
+  box-shadow: 0 10rpx 30rpx rgba(20, 20, 35, 0.28);
+  backdrop-filter: blur(6rpx);
+}
+.act-text-row { display: flex; align-items: center; min-width: 0; }
+.act-text {
+  flex: 1; min-width: 0; color: #eef; font-size: 26rpx; line-height: 1.6;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.act-text.act-guide { color: #ffd97a; }
+.act-cut {
+  flex-shrink: 0; margin-left: 14rpx; padding: 8rpx 16rpx;
+  background: rgba(255, 255, 255, 0.16); border-radius: 999rpx;
+  color: #fff; font-size: 22rpx; font-weight: 700; line-height: 1.3;
+}
+.act-btns { display: flex; margin-top: 14rpx; }
+.act-btn {
+  flex: 1; text-align: center; padding: 14rpx 0;
+  border-radius: 999rpx; background: rgba(255, 255, 255, 0.14);
+  color: #fff; font-size: 26rpx; font-weight: 600;
+  margin-right: 14rpx;
+}
+.act-btn.primary {
+  flex: 1.4;
+  background: linear-gradient(135deg, #4f6ef7, #7b5cf0);
+  color: #fff; font-weight: 800;
+}
+.act-btn.plain { flex: 0 0 88rpx; margin-right: 0; background: rgba(255, 255, 255, 0.1); }
+.act-btn:last-child { margin-right: 0; }
+
+/* 整句翻译结果 */
+.s-orig {
+  font-size: 28rpx; color: #3a3d4a; line-height: 1.8;
+  background: #f4f6ff; border-radius: 14rpx;
+  padding: 18rpx 20rpx; margin-top: 22rpx; word-break: break-word;
+}
+
+/* 工具栏右侧：字号组 + 整章朗读按钮 */
+.frow { display: flex; align-items: center; }
+.go-al {
+  width: 64rpx; height: 64rpx; margin-left: 14rpx; border-radius: 50%;
+  background: #eef1ff; color: #4f6ef7; font-size: 28rpx;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2rpx 8rpx rgba(79, 110, 247, 0.18);
+}
+.go-al.on {
+  background: linear-gradient(135deg, #4f6ef7, #7b5cf0);
+  color: #fff; box-shadow: 0 4rpx 12rpx rgba(123, 92, 240, 0.35);
+}
+
+/* 整章朗读控制条：吸顶在工具栏下方，正文滚动时可随手控制 */
+.aloud {
+  position: sticky; top: 100rpx; z-index: 7;
+  background: #fff;
+  border-bottom: 1rpx solid #f0ecfb;
+  padding: 10rpx 24rpx 12rpx;
+  box-shadow: 0 6rpx 14rpx rgba(90, 70, 220, 0.06);
+}
+.al-row1 { display: flex; align-items: center; }
+/* 上一句 / 下一句圆形跳转按钮 */
+.al-nav {
+  flex-shrink: 0; width: 50rpx; height: 50rpx; margin-right: 10rpx; border-radius: 50%;
+  background: #f1eefb; color: #6a55d8; font-size: 22rpx;
+  display: flex; align-items: center; justify-content: center;
+}
+.al-play {
+  flex-shrink: 0; font-size: 22rpx; color: #fff; font-weight: 600;
+  background: linear-gradient(135deg, #4f6ef7, #7b5cf0);
+  border-radius: 999rpx; padding: 8rpx 16rpx; white-space: nowrap;
+}
+.al-slider { flex: 1; margin: 0 10rpx; min-width: 0; }
+.al-quit {
+  width: 44rpx; height: 44rpx; margin-left: 4rpx; border-radius: 50%;
+  background: #f4f3f8; color: #8a8a9a; font-size: 22rpx;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.al-row2 { display: flex; align-items: center; margin-top: 8rpx; min-width: 0; }
+.al-text {
+  flex: 1; min-width: 0; font-size: 22rpx; color: #7a7a8c;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-right: 12rpx;
+}
+/* 倍速循环按钮 */
+.al-rate {
+  flex-shrink: 0; font-size: 20rpx; color: #7b5cf0; background: #f3f0fe;
+  padding: 4rpx 12rpx; border-radius: 999rpx; margin-right: 10rpx;
+  white-space: nowrap; font-weight: 600;
+}
+.al-num { font-size: 22rpx; color: #7b5cf0; white-space: nowrap; flex-shrink: 0; margin-right: 12rpx; }
+.al-follow {
+  flex-shrink: 0; font-size: 20rpx; color: #b0b0c0;
+  padding: 4rpx 12rpx; border-radius: 999rpx; border: 1rpx solid #ecebf3;
+  white-space: nowrap;
+}
+.al-follow.on { color: #7b5cf0; border-color: #d9d0f5; background: #f6f2ff; }
+/* 连续朗读开关（亮起=本章读完自动续读下一章） */
+.al-cont {
+  flex-shrink: 0; font-size: 20rpx; color: #b0b0c0;
+  padding: 4rpx 12rpx; border-radius: 999rpx; border: 1rpx solid #ecebf3;
+  white-space: nowrap; margin-left: 8rpx;
+}
+.al-cont.on { color: #4f6ef7; border-color: #cbd6f7; background: #f2f6ff; }
+/* 悬浮译文开关（控制条内，紧贴进度条右侧） */
+.al-float {
+  flex-shrink: 0; margin-left: 6rpx; margin-right: 2rpx;
+  min-width: 48rpx; height: 44rpx; padding: 0 10rpx;
+  border-radius: 999rpx; background: #f4f3f8; color: #8a8a9a;
+  font-size: 22rpx; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  box-sizing: border-box;
+}
+.al-float.on {
+  background: linear-gradient(135deg, #4f6ef7, #7b5cf0);
+  color: #fff; box-shadow: 0 2rpx 8rpx rgba(123, 92, 240, 0.3);
+}
+
+/* 朗读译文悬浮框：fixed 可拖拽 */
+.al-tr {
+  position: fixed; z-index: 40; box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.97);
+  border: 1rpx solid #efeafc; border-radius: 18rpx;
+  box-shadow: 0 10rpx 32rpx rgba(70, 60, 160, 0.18);
+  padding: 16rpx 20rpx 10rpx;
+  overflow: hidden;
+}
+.al-tr-en {
+  font-size: 19rpx; color: #8a8aa0; line-height: 1.45;
+  word-break: break-all;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+  margin-bottom: 6rpx;
+}
+.al-tr-zh {
+  font-size: 26rpx; color: #322d4d; line-height: 1.55;
+  word-break: break-all;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden;
+}
+.al-tr-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 10rpx; }
+.al-tr-src { font-size: 18rpx; color: #b4adcf; }
+.al-tr-close {
+  font-size: 18rpx; color: #7b5cf0; background: #f3f0fe;
+  padding: 4rpx 12rpx; border-radius: 999rpx;
+}
+
+/* 朗读中的当前句高亮 */
+.sline.loud { background: #ffe9ad; }
+.sline.loud .tok { color: #7a5200; }

@@ -8,7 +8,7 @@ const store = require('../../utils/store.js')
 Page({
   data: {
     status: 'matching', // matching | waiting | playing | finished
-    bookId: 'daily', level: 0, solo: false, roomId: '',
+    bookId: 'daily', level: 0, solo: false, roomId: '', roomIdPretty: '',
     oppOffline: false,
     myOpenid: '',
     myScore: 0, oppName: '对手', oppScore: 0,
@@ -27,7 +27,13 @@ Page({
     const bookId = q.bookId || 'daily'
     const level = Number(q.level || 0)
     const solo = q.solo === '1'
+    // 好友从邀请卡片点进来：携带 roomId，匹配时直接入座这间房
+    let joinRoomId = ''
+    if (q.roomId) {
+      try { joinRoomId = decodeURIComponent(q.roomId) } catch (e) { joinRoomId = q.roomId }
+    }
     this.setData({ bookId, level, solo })
+    this._joinRoomId = joinRoomId
     this._resultCalled = false
     this._localRewarded = false
     this.bootstrap()
@@ -43,13 +49,28 @@ Page({
   },
 
   match() {
+    const payload = { action: 'match', bookId: this.data.bookId, level: this.data.level }
+    if (this._joinRoomId) payload.roomId = this._joinRoomId // 被邀请：直接入座指定房间
     wx.cloud.callFunction({
       name: 'pk',
-      data: { action: 'match', bookId: this.data.bookId, level: this.data.level }
+      data: payload
     }).then(res => {
-      const roomId = res.result && res.result.roomId
+      const rr = res.result || {}
+      if (rr.error) {
+        // 邀请的房间已失效（已开局/已关闭）→ 退回普通匹配，不让好友干等
+        if (this._joinRoomId) {
+          this._joinRoomId = ''
+          wx.showToast({ title: '房间已失效，为你匹配新对手', icon: 'none' })
+          return this.match()
+        }
+        wx.showToast({ title: '匹配失败', icon: 'none' })
+        return
+      }
+      const roomId = rr.roomId
       if (!roomId) { wx.showToast({ title: '匹配失败', icon: 'none' }); return }
-      this.setData({ roomId })
+      // 房间号每 4 位一组展示，方便识读与核对（复制时仍复制完整房号）
+      const pretty = roomId.replace(/(.{4})/g, '$1 ').trim()
+      this.setData({ roomId, roomIdPretty: pretty })
       if (this.data.solo) {
         wx.cloud.callFunction({ name: 'pk', data: { action: 'start', roomId, allowSolo: true } })
       }
@@ -58,6 +79,26 @@ Page({
       console.error(err)
       wx.showToast({ title: '匹配出错', icon: 'none' })
     })
+  },
+
+  // 一键复制房间号：点房间卡片或「复制」按钮都触发
+  copyRoomId() {
+    const id = this.data.roomId
+    if (!id) return
+    wx.setClipboardData({
+      data: id,
+      success: () => wx.showToast({ title: '房间号已复制，去粘贴发给好友吧', icon: 'none' })
+    })
+  },
+
+  // 邀请卡片：好友点开后自动带 roomId 入座本房间，无需手输房间号
+  onShareAppMessage() {
+    const { roomId, bookId, level, status } = this.data
+    const base = `/pages/pkroom/pkroom?bookId=${bookId}&level=${level}`
+    const path = roomId && (status === 'matching' || status === 'waiting')
+      ? `${base}&roomId=${encodeURIComponent(roomId)}`
+      : base
+    return { title: '⚔️ 来和我单词 PK，看谁记得牢！', path }
   },
 
   startWatch(roomId) {
@@ -248,6 +289,7 @@ Page({
     this._lastQ = -1; this._starting = false; this._timeoutFired = false
     this._resultCalled = false; this._localRewarded = false
     this._reconnecting = false
+    this._joinRoomId = '' // 再来一局：重新普通匹配，不再回到原邀请房间
     this.stopTimer(); this.stopHeartbeat()
     this.setData({
       status: 'matching', current: null, selected: -1, answered: false, locked: false,

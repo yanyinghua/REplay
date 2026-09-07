@@ -5,19 +5,19 @@ const cloud = require('wx-server-sdk');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const _ = db.command;
-const { OPENID } = cloud.getWXContext();
 
 exports.main = async (e) => {
+  const { OPENID } = cloud.getWXContext();
   const action = e.action;
-  if (action === 'search') return search(e);
-  if (action === 'follow') return follow(e);
-  if (action === 'unfollow') return unfollow(e);
-  if (action === 'list') return list();
+  if (action === 'search') return search(e, OPENID);
+  if (action === 'follow') return follow(e, OPENID);
+  if (action === 'unfollow') return unfollow(e, OPENID);
+  if (action === 'list') return list(OPENID);
   return { error: 'unknown action: ' + action };
 };
 
 // 昵称搜索（前缀匹配，排除自己），返回前 20 个
-async function search(e) {
+async function search(e, OPENID) {
   const kw = (e.nickName || '').trim();
   if (!kw) return { list: [] };
   const reg = db.RegExp({ regexp: '^' + escapeReg(kw), options: 'i' });
@@ -37,7 +37,7 @@ async function search(e) {
 }
 
 // 关注：写双向互关；已是好友则忽略（幂等）
-async function follow(e) {
+async function follow(e, OPENID) {
   const target = e.targetOpenid;
   if (!target || target === OPENID) return { error: 'invalid target' };
   const friends = db.collection('friends');
@@ -58,7 +58,7 @@ async function follow(e) {
 }
 
 // 取关：删双向
-async function unfollow(e) {
+async function unfollow(e, OPENID) {
   const target = e.targetOpenid;
   if (!target) return { error: 'invalid target' };
   const friends = db.collection('friends');
@@ -68,7 +68,7 @@ async function unfollow(e) {
 }
 
 // 我的好友（互关）列表
-async function list() {
+async function list(OPENID) {
   const friends = db.collection('friends');
   const mine = await friends.where({ _openid: OPENID }).limit(200).get();
   const ids = (mine.data || []).map((r) => r.friendOpenid);

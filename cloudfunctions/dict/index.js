@@ -81,14 +81,30 @@ async function lookupDict(word) {
 
 // ---------- MyMemory 免费翻译（中英互译） ----------
 async function translate(text, langpair) {
+  // mt=1 允许机器翻译参与，但接口仍可能把翻译记忆库里“长得像、语义却可能相反”的
+  // 旧句段（如 I'm a reader 命中 I'm not a reader → “我不是读者”）当作首选结果返回，
+  // 因此必须优先挑选真正的机器翻译条目（created-by 含 "MT"），保证译文与原文语义一致。
   const url = 'https://api.mymemory.translated.net/get?q=' +
-    encodeURIComponent(text) + '&langpair=' + encodeURIComponent(langpair);
+    encodeURIComponent(text) + '&langpair=' + encodeURIComponent(langpair) + '&mt=1';
   const json = await httpGetJson(url);
   if (!json || json.responseStatus !== 200) return null;
-  let out = json.responseData && json.responseData.translatedText;
+
+  let out = null;
+  const ms = (json.matches && Array.isArray(json.matches)) ? json.matches : [];
+  for (let i = 0; i < ms.length; i++) {
+    const m = ms[i];
+    const who = String((m && m['created-by']) || '').toLowerCase();
+    if (who.indexOf('mt') >= 0 && m.translation) { out = String(m.translation); break; }
+  }
+  // 响应里没有纯机翻条目时才退回到主结果（仍是免费接口给出的最好猜测）
+  if (typeof out !== 'string' || !out.trim()) {
+    out = json.responseData && json.responseData.translatedText;
+  }
   if (typeof out !== 'string' || !out.trim()) return null;
   // 免费额度耗尽时的提示串视为失败
   if (out.indexOf('MYMEMORY WARNING') >= 0) return null;
+  // 译文和原文几乎一样（实际没翻译出来）视为失败
+  if (normKey(out) === normKey(text)) return null;
   return out.replace(/\s*\n\s*/g, '\n').trim();
 }
 
